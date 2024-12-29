@@ -30,7 +30,7 @@ class AuthService {
 
   // Đăng ký
   Future<Map<String, dynamic>> register(
-      String username, String email, String password) async {
+      String username, String email, String password, String fullName, String role) async {
     final url = Uri.parse("${Config.apiBaseUrl}/Authenticate/register");
     final response = await http.post(
       url,
@@ -39,6 +39,8 @@ class AuthService {
         'username': username,
         'email': email,
         'password': password,
+        'fullName': fullName,
+        'role': role,
       }),
     );
 

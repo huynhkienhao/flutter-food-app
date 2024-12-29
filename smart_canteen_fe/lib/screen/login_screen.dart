@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_canteen_fe/screen/register_screen.dart';
+import '../services/auth_service.dart';
 import '../admin_area/admin_main_page.dart';
 import '../user_area/user_main_page.dart';
-import 'home_screen.dart';
-import '../services/auth_service.dart';
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -13,111 +15,231 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isLoading = false;
 
   final AuthService authService = AuthService();
 
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> login() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final response = await authService.login(
-        usernameController.text,
-        passwordController.text,
-      );
-
-      // In phản hồi để debug
-      print("Login response: $response");
-
-      if (response['status'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-
-        // Lưu token và userId
-        final token = response['token'];
-        final userId = response['userId'];
-        final role = response['role'];
-
-        if (token != null && userId != null && role != null) {
-          await prefs.setString("jwt_token", token);
-          await prefs.setString("user_id", userId);
-          await prefs.setString("user_role", role);
-
-          // Chuyển hướng dựa trên role
-          if (role == 'Admin') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AdminScreen()),
-            );
-          } else if (role == 'User') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => UserScreen()),
-            );
-          } else {
-            throw Exception("Không xác định được role");
-          }
-
-          // Gọi API để lấy thông tin chi tiết tài khoản
-          final userDetails = await authService.getUserDetails(userId, token);
-          final email = userDetails['email'];
-          print("Fetched Email: $email");
-
-          // Lưu email vào SharedPreferences
-          await prefs.setString("user_email", email);
-
-          // Chuyển hướng tới màn hình Home
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          );
-        } else {
-          throw Exception("Token hoặc UserId không tồn tại");
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login failed: ${response['message']}")),
-        );
-      }
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${error.toString()}")),
-      );
-    } finally {
+    if (_formKey.currentState!.validate()) {
       setState(() {
-        isLoading = false;
+        isLoading = true;
       });
+
+      try {
+        final response = await authService.login(
+          usernameController.text.trim(),
+          passwordController.text.trim(),
+        );
+
+        if (response['status'] == true) {
+          final prefs = await SharedPreferences.getInstance();
+
+          // Lưu token và thông tin người dùng
+          final token = response['token'];
+          final userId = response['userId'];
+          final role = response['role'];
+
+          if (token != null && userId != null && role != null) {
+            await prefs.setString("jwt_token", token);
+            await prefs.setString("user_id", userId);
+            await prefs.setString("user_role", role);
+
+            // Điều hướng dựa trên vai trò
+            if (role == 'Admin') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AdminScreen()),
+              );
+            } else if (role == 'User') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => UserScreen()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Role không xác định!")),
+              );
+            }
+          } else {
+            throw Exception("Thông tin phản hồi từ API không đầy đủ.");
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Login failed: ${response['message']}")),
+          );
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${error.toString()}")),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+      body: Stack(
+        children: [
+          // Logo ở góc trên bên trái
+          Positioned(
+            top: 40,
+            left: 20,
+            child: Image.asset(
+              'assets/images/logo.png', // Đường dẫn logo
+              height: 150, // Chiều cao logo
+              width: 150, // Chiều rộng logo
             ),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(labelText: 'Password'),
+          ),
+          // Nội dung chính của màn hình
+          SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.only(top: 200), // Khoảng cách margin top
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Đăng nhập",
+                      style: TextStyle(
+                        fontSize: 36,
+                        color: Color.fromRGBO(56, 56, 56, .9),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    Form(
+                      key: _formKey,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: usernameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Username',
+                                floatingLabelStyle: TextStyle(color: Colors.green),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Vui lòng nhập username';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            TextFormField(
+                              controller: passwordController,
+                              obscureText: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Password',
+                                floatingLabelStyle: TextStyle(color: Colors.green),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Vui lòng nhập mật khẩu';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            isLoading
+                                ? const CircularProgressIndicator()
+                                : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Login",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    RichText(
+                      text: TextSpan(
+                        text: "Chưa có tài khoản? ", // Phần văn bản thông thường
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16, // Tăng kích thước font
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "Đăng ký ngay", // Phần văn bản có thể nhấn
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16, // Tăng kích thước font
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                // Điều hướng tới trang đăng ký
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterScreen(),
+                                  ),
+                                );
+                              },
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center, // Căn giữa dòng chữ
+                    ),
+
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-              onPressed: login,
-              child: Text('Login'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
