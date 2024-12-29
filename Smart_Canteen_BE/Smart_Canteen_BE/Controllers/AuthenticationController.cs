@@ -66,16 +66,20 @@ namespace Smart_Canteen_BE.Controllers
                 return BadRequest(ModelState);
 
             var user = await _userManager.FindByNameAsync(model.Username);
+
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+            {
                 return Unauthorized(new { Status = false, Message = "Invalid username or password" });
+            }
 
             var userRoles = await _userManager.GetRolesAsync(user);
 
             var authClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
 
             foreach (var role in userRoles)
             {
@@ -84,12 +88,12 @@ namespace Smart_Canteen_BE.Controllers
 
             var token = GenerateToken(authClaims);
 
-            // Trả thêm UserId trong phản hồi
             return Ok(new
             {
                 Status = true,
                 Token = token,
-                UserId = user.Id, // Thêm UserId ở đây
+                UserId = user.Id,
+                Role = userRoles.FirstOrDefault(), // Chỗ sửa code
                 Message = "Logged in successfully"
             });
         }
@@ -116,6 +120,4 @@ namespace Smart_Canteen_BE.Controllers
             return tokenHandler.WriteToken(token);
         }
     }
-
-
 }

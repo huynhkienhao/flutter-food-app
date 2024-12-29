@@ -467,3 +467,4 @@ D:\Projects\Project - Lap Trinh Tren Thiet Bi Di Dong\Final Project\Smart_Cantee
 D:\Projects\Project - Lap Trinh Tren Thiet Bi Di Dong\Final Project\Smart_Canteen_BE\Smart_Canteen_BE\obj\Debug\net8.0\Smart_Canteen_BE.pdb
 D:\Projects\Project - Lap Trinh Tren Thiet Bi Di Dong\Final Project\Smart_Canteen_BE\Smart_Canteen_BE\obj\Debug\net8.0\Smart_Canteen_BE.genruntimeconfig.cache
 D:\Projects\Project - Lap Trinh Tren Thiet Bi Di Dong\Final Project\Smart_Canteen_BE\Smart_Canteen_BE\obj\Debug\net8.0\ref\Smart_Canteen_BE.dll
+D:\Projects\Project - Lap Trinh Tren Thiet Bi Di Dong\Final Project\Smart_Canteen_BE\Smart_Canteen_BE\obj\Debug\net8.0\Smart_Canteen_BE.sourcelink.json

@@ -60,5 +60,4 @@ namespace Smart_Canteen_BE.Controllers
             return Ok(new { Message = "User deleted successfully" });
         }
     }
-
 }

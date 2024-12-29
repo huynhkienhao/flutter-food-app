@@ -54,9 +54,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove("jwt_token");
-    await prefs.remove("user_id");
-    await prefs.remove("user_email");
+    // await prefs.remove("jwt_token");
+    // await prefs.remove("user_id");
+    // await prefs.remove("user_email");
+
+    await prefs.clear();
 
     Navigator.pushAndRemoveUntil(
       context,

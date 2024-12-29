@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../admin_area/admin_main_page.dart';
+import '../user_area/user_main_page.dart';
 import 'home_screen.dart';
 import '../services/auth_service.dart';
 
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
         passwordController.text,
       );
 
+      // In phản hồi để debug
       print("Login response: $response");
 
       if (response['status'] == true) {
@@ -34,10 +37,27 @@ class _LoginScreenState extends State<LoginScreen> {
         // Lưu token và userId
         final token = response['token'];
         final userId = response['userId'];
+        final role = response['role'];
 
-        if (token != null && userId != null) {
+        if (token != null && userId != null && role != null) {
           await prefs.setString("jwt_token", token);
           await prefs.setString("user_id", userId);
+          await prefs.setString("user_role", role);
+
+          // Chuyển hướng dựa trên role
+          if (role == 'Admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminScreen()),
+            );
+          } else if (role == 'User') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => UserScreen()),
+            );
+          } else {
+            throw Exception("Không xác định được role");
+          }
 
           // Gọi API để lấy thông tin chi tiết tài khoản
           final userDetails = await authService.getUserDetails(userId, token);

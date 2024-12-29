@@ -4,6 +4,7 @@ import '../config_url/config.dart';
 
 
 class AuthService {
+
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse("${Config.apiBaseUrl}/Authenticate/login");
@@ -14,7 +15,14 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final data = json.decode(response.body) as Map<String, dynamic>;
+
+      if (data['status'] == true) {
+        return data;
+      } else {
+        throw Exception(data['message'] ?? "Đăng nhập thất bại");
+      }
+      // return json.decode(response.body);
     } else {
       throw Exception("Không đăng nhập được: ${response.statusCode}");
     }
@@ -62,5 +70,4 @@ class AuthService {
       throw Exception("Không thể lấy thông tin chi tiết người dùng: ${response.statusCode}");
     }
   }
-
 }
