@@ -19,12 +19,12 @@ void userDetails({
             children: [
               const SizedBox(height: 10),
               const Text(
-                "User Details",
+                "user Details",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 10),
               // Hiển thị User ID
-              userDetailsTextField(label: "User ID", value: user.id),
+              userDetailsTextField(label: "user ID", value: user.id),
               const SizedBox(height: 10),
               // Hiển thị Email
               userDetailsTextField(label: "Email", value: user.email),

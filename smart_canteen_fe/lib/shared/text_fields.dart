@@ -113,7 +113,7 @@ DropdownButtonFormField<String> roleDropdownField({
   );
 }
 
-/// User Details TextField (Read-only for displaying user information)
+/// user Details TextField (Read-only for displaying user information)
 TextField userDetailsTextField({
   required String label,
   required String value,

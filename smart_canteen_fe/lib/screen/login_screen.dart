@@ -3,8 +3,8 @@ import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_canteen_fe/screen/register_screen.dart';
 import '../services/auth_service.dart';
-import '../admin_area/admin_main_page.dart';
-import '../user_area/user_main_page.dart';
+import '../Admin/AdminScreen.dart';
+import '../User/UserScreen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -53,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
             await prefs.setString("user_role", role);
 
             // Điều hướng dựa trên vai trò
-            if (role == 'Admin') {
+            if (role == 'admin') {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => AdminScreen()),
               );
-            } else if (role == 'User') {
+            } else if (role == 'user') {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => UserScreen()),

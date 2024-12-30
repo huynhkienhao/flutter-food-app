@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config_url/config.dart';
 
-
 class AuthService {
-
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse("${Config.apiBaseUrl}/Authenticate/login");
@@ -22,7 +20,6 @@ class AuthService {
       } else {
         throw Exception(data['message'] ?? "Đăng nhập thất bại");
       }
-      // return json.decode(response.body);
     } else {
       throw Exception("Không đăng nhập được: ${response.statusCode}");
     }
@@ -51,8 +48,9 @@ class AuthService {
     }
   }
 
+  // Lấy thông tin chi tiết của user
   Future<Map<String, dynamic>> getUserDetails(String userId, String token) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/User/$userId");
+    final url = Uri.parse("${Config.apiBaseUrl}/user/$userId");
     print("Đang lấy thông tin chi tiết người dùng cho URL: $url");
     print("Authorization Token: $token");
 
@@ -70,6 +68,24 @@ class AuthService {
     } else {
       print("Không thể lấy thông tin chi tiết người dùng: ${response.statusCode}, ${response.body}");
       throw Exception("Không thể lấy thông tin chi tiết người dùng: ${response.statusCode}");
+    }
+  }
+
+  // Cập nhật thông tin user
+  Future<void> updateUser(
+      String userId, Map<String, dynamic> userData, String token) async {
+    final url = Uri.parse("${Config.apiBaseUrl}/user/$userId");
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(userData),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update user: ${response.statusCode}");
     }
   }
 }

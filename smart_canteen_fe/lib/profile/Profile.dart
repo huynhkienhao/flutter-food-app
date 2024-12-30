@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
+import '../update_user/UpdateUserScreen.dart';
 
-class HomeScreen extends StatefulWidget {
+
+class ProfileScreen extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService authService = AuthService();
   String? userId;
   String? email;
+  String? fullName;
+  String? phoneNumber;
   bool isLoading = true;
 
   @override
@@ -25,59 +28,30 @@ class _HomeScreenState extends State<HomeScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString("jwt_token");
       final userId = prefs.getString("user_id");
-      final email = prefs.getString("user_email");
 
-      print("Token: $token");
-      print("UserId: $userId");
-      print("Email: $email");
+      if (token != null && userId != null) {
+        final userDetails = await authService.getUserDetails(userId, token);
 
-      if (token != null && userId != null && email != null) {
         setState(() {
           this.userId = userId;
-          this.email = email;
+          email = userDetails["email"];
+          fullName = userDetails["fullName"];
+          phoneNumber = userDetails["phoneNumber"];
           isLoading = false;
         });
-      } else {
-        print("Token hoặc UserId hoặc email không tồn tại. Đăng xuất...");
-        _logout();
       }
     } catch (e) {
-      print("Error in _loadUserDetails: $e");
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error loading user details: $e")),
       );
-
-      _logout();
     }
-  }
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove("jwt_token");
-    // await prefs.remove("user_id");
-    // await prefs.remove("user_email");
-
-    await prefs.clear();
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-          (route) => false,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
+        title: Text('Profile'),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -93,6 +67,29 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 10),
             Text('user ID: $userId'),
             Text('Email: $email'),
+            Text('Full Name: $fullName'),
+            Text('Phone Number: $phoneNumber'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UpdateUserScreen(
+                      userId: userId!,
+                      email: email,
+                      fullName: fullName,
+                      phoneNumber: phoneNumber,
+                    ),
+                  ),
+                );
+
+                if (updated == true) {
+                  _loadUserDetails();
+                }
+              },
+              child: Text("Update user Info"),
+            ),
           ],
         ),
       ),

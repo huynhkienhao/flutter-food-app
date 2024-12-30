@@ -8,7 +8,7 @@ class RoleCheck {
     final decodedToken = JwtDecoder.decode(TokenHandler().getToken());
     String role = decodedToken['role'];
 
-    if (role != "Admin" || role.isEmpty) {
+    if (role != "admin" || role.isEmpty) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -21,7 +21,7 @@ class RoleCheck {
     final decodedToken = JwtDecoder.decode(TokenHandler().getToken());
     String role = decodedToken['role'];
 
-    if (role != "User" || role.isEmpty) {
+    if (role != "user" || role.isEmpty) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),

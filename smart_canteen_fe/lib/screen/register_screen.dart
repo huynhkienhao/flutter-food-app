@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -71,19 +71,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Căn logo về bên trái
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo bên trái
             Padding(
               padding: const EdgeInsets.only(top: 40, left: 20),
               child: Image.asset(
-                'assets/images/logo.png', // Đường dẫn logo
-                height: 150, // Chiều cao logo
-                width: 150, // Chiều rộng logo
+                'assets/images/logo.png',
+                height: 150,
+                width: 150,
               ),
             ),
             const SizedBox(height: 20),
-            // Tiêu đề
             Center(
               child: const Text(
                 "Register",
@@ -101,7 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // Username Field
                     TextFormField(
                       controller: usernameController,
                       decoration: const InputDecoration(
@@ -127,7 +124,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 10),
-                    // Full Name Field
                     TextFormField(
                       controller: fullNameController,
                       decoration: const InputDecoration(
@@ -153,7 +149,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 10),
-                    // Email Field
                     TextFormField(
                       controller: emailController,
                       decoration: const InputDecoration(
@@ -175,15 +170,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập email của bạn';
                         }
-                        if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$")
-                            .hasMatch(value)) {
+                        if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}").hasMatch(value)) {
                           return 'Vui lòng nhập email hợp lệ';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 10),
-                    // Password Field
                     TextFormField(
                       controller: passwordController,
                       obscureText: true,
@@ -210,7 +203,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 10),
-                    // Role Field
                     TextFormField(
                       controller: roleController,
                       decoration: const InputDecoration(
@@ -236,7 +228,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    // Register Button
                     isLoading
                         ? const CircularProgressIndicator()
                         : SizedBox(
@@ -263,7 +254,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // Navigate to Login
             Center(
               child: RichText(
                 text: TextSpan(

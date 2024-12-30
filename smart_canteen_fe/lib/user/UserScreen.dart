@@ -21,7 +21,7 @@ class UserScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("User Dashboard"),
+        title: Text("user Dashboard"),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -36,7 +36,7 @@ class UserScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Welcome, User!",
+              "Welcome, user!",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
