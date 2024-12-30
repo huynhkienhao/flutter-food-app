@@ -98,8 +98,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "category",
-        "Type": "Smart_Canteen_BE.Model.Category",
+        "Name": "categoryInput",
+        "Type": "Smart_Canteen_BE.DTO.CategoryInputDto",
         "IsRequired": true
       }
     ],
@@ -135,8 +135,8 @@
         "IsRequired": true
       },
       {
-        "Name": "category",
-        "Type": "Smart_Canteen_BE.Model.Category",
+        "Name": "categoryInput",
+        "Type": "Smart_Canteen_BE.DTO.CategoryInputDto",
         "IsRequired": true
       }
     ],
@@ -297,7 +297,7 @@
   },
   {
     "ContainingType": "Smart_Canteen_BE.Controllers.ProductController",
-    "Method": "Update",
+    "Method": "UpdateProduct",
     "RelativePath": "api/Product/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
@@ -309,8 +309,8 @@
         "IsRequired": true
       },
       {
-        "Name": "product",
-        "Type": "Smart_Canteen_BE.Model.Product",
+        "Name": "productDto",
+        "Type": "Smart_Canteen_BE.DTO.ProductInputDto",
         "IsRequired": true
       }
     ],
@@ -326,6 +326,22 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Smart_Canteen_BE.Controllers.ProductController",
+    "Method": "GetProductsByCategory",
+    "RelativePath": "api/Product/category/{categoryId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "categoryId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -401,6 +417,27 @@
       {
         "Name": "id",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Smart_Canteen_BE.Controllers.UserController",
+    "Method": "UpdateUser",
+    "RelativePath": "api/User/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "updateUserDto",
+        "Type": "Smart_Canteen_BE.DTO.UpdateUserDto",
         "IsRequired": true
       }
     ],

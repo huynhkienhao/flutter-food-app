@@ -53,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
             await prefs.setString("user_role", role);
 
             // Điều hướng dựa trên vai trò
-            if (role == 'admin') {
+            if (role == 'Admin') {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => AdminScreen()),
               );
-            } else if (role == 'user') {
+            } else if (role == 'User') {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => UserScreen()),
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: usernameController,
                               decoration: const InputDecoration(
-                                labelText: 'Username',
+                                labelText: 'Tên người dùng',
                                 floatingLabelStyle: TextStyle(color: Colors.green),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: passwordController,
                               obscureText: true,
                               decoration: const InputDecoration(
-                                labelText: 'Password',
+                                labelText: 'Mật khẩu',
                                 floatingLabelStyle: TextStyle(color: Colors.green),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.all(Radius.circular(12)),
