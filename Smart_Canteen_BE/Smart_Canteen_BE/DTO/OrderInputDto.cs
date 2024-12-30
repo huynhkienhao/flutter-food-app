@@ -4,10 +4,10 @@ namespace Smart_Canteen_BE.DTO
 {
     public class OrderInputDto
     {
-        [Required(ErrorMessage = "UserId is required")]
+        [Required(ErrorMessage = "ID user là bắt buộc")]
         public string UserId { get; set; }
 
-        [Required(ErrorMessage = "CartIds are required")]
+        [Required(ErrorMessage = "ID giỏ hàng là bắt buộc")]
         public List<int> CartIds { get; set; }
     }
 

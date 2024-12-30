@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Smart_Canteen_BE.DTO;
 using Smart_Canteen_BE.Model;
 
 namespace Smart_Canteen_BE.Controllers
@@ -16,7 +18,9 @@ namespace Smart_Canteen_BE.Controllers
             _userManager = userManager;
         }
 
+
         // Lấy danh sách tất cả người dùng
+        [Authorize(Policy = "AdminOnly")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -26,6 +30,7 @@ namespace Smart_Canteen_BE.Controllers
                 u.Id,
                 u.UserName,
                 u.Email,
+                u.PhoneNumber
             }));
         }
 
@@ -42,15 +47,42 @@ namespace Smart_Canteen_BE.Controllers
                 user.Id,
                 user.UserName,
                 user.Email,
+                user.PhoneNumber,
+                user.FullName
             });
         }
 
+        // Cập nhật thông tin người dùng
+        [Authorize(Policy = "AdminOrUser")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto updateUserDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound(new { Message = "User not found" });
+
+            // Cập nhật thông tin người dùng
+            user.FullName = updateUserDto.FullName ?? user.FullName;
+            user.Email = updateUserDto.Email ?? user.Email;
+            user.PhoneNumber = updateUserDto.PhoneNumber ?? user.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return StatusCode(500, new { Message = "Failed to update user", Errors = result.Errors });
+
+            return Ok(new { Message = "User updated successfully" });
+        }
+
+        [Authorize(Policy = "AdminOnly")]
         // Xóa một người dùng
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null)   
+            if (user == null)
                 return NotFound(new { Message = "User not found" });
 
             var result = await _userManager.DeleteAsync(user);

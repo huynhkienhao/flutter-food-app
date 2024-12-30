@@ -19,7 +19,21 @@ namespace Smart_Canteen_BE.Repository
 
         public async Task AddToCartAsync(Cart cart)
         {
-            await _context.Carts.AddAsync(cart);
+            var existingCart = await _context.Carts
+                .FirstOrDefaultAsync(c => c.UserId == cart.UserId && c.ProductId == cart.ProductId);
+
+            if (existingCart != null)
+            {
+                // Nếu sản phẩm đã tồn tại trong giỏ hàng, tăng số lượng
+                existingCart.Quantity += cart.Quantity;
+                _context.Carts.Update(existingCart);
+            }
+            else
+            {
+                // Nếu sản phẩm chưa tồn tại, thêm mới
+                await _context.Carts.AddAsync(cart);
+            }
+
             await _context.SaveChangesAsync();
         }
 

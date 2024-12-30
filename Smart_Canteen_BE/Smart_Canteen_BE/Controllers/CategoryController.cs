@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Smart_Canteen_BE.DTO;
 using Smart_Canteen_BE.Model;
 using Smart_Canteen_BE.Repository;
 
@@ -21,56 +22,92 @@ namespace Smart_Canteen_BE.Controllers
         public async Task<IActionResult> GetAll()
         {
             var categories = await _categoryRepository.GetAllCategoriesAsync();
-            return Ok(categories);
+            var categoryOutputs = categories.Select(c => new CategoryOutputDto
+            {
+                CategoryId = c.CategoryId,
+                CategoryName = c.CategoryName,
+                Description = c.Description
+            });
+
+            return Ok(categoryOutputs);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var category = await _categoryRepository.GetCategoryByIdAsync(id);
-            if (category == null)
-                return NotFound();
+            // Lấy danh mục kèm theo các sản phẩm
+            var category = await _categoryRepository.GetCategoryByIdAsync(id, includeProducts: true);
 
-            return Ok(category);
+            if (category == null)
+                return NotFound(new { Message = "Category not found" });
+
+            // Bao gồm danh sách sản phẩm
+            var categoryOutput = new CategoryOutputDto
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName,
+                Description = category.Description,
+                Products = category.Products.Select(p => new ProductOutputDto
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    Price = p.Price,
+                    Description = p.Description,
+                    Image = p.Image,
+                    Stock = p.Stock,
+                    CategoryId = p.CategoryId
+                }).ToList()
+            };
+
+            return Ok(categoryOutput);
         }
         [Authorize(Policy = "AdminOnly")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Category category)
+        public async Task<IActionResult> Create([FromBody] CategoryInputDto categoryInput)
         {
-            // Kiểm tra tính hợp lệ của Model
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             // Kiểm tra trùng lặp tên danh mục
             var existingCategory = await _categoryRepository.GetAllCategoriesAsync();
-            if (existingCategory.Any(c => c.CategoryName.Equals(category.CategoryName, StringComparison.OrdinalIgnoreCase)))
+            if (existingCategory.Any(c => c.CategoryName.Equals(categoryInput.CategoryName, StringComparison.OrdinalIgnoreCase)))
             {
                 return Conflict(new { Message = "Category with the same name already exists." });
             }
 
-            // Thêm danh mục vào cơ sở dữ liệu
+            // Tạo Category từ DTO
+            var category = new Category
+            {
+                CategoryName = categoryInput.CategoryName,
+                Description = categoryInput.Description
+            };
+
             await _categoryRepository.AddCategoryAsync(category);
 
-            // Phản hồi thành công với thông tin danh mục vừa tạo
-            return CreatedAtAction(nameof(GetById), new { id = category.CategoryId }, category);
+            // Trả về thông tin danh mục vừa tạo
+            var categoryOutput = new CategoryOutputDto
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName,
+                Description = category.Description
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = category.CategoryId }, categoryOutput);
         }
 
         [Authorize(Policy = "AdminOnly")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Category category)
+        public async Task<IActionResult> Update(int id, [FromBody] CategoryInputDto categoryInput)
         {
-            if (id != category.CategoryId)
-                return BadRequest(new { Message = "Category ID mismatch" });
+            var category = await _categoryRepository.GetCategoryByIdAsync(id);
+            if (category == null)
+                return NotFound(new { Message = "Category not found" });
 
-            try
-            {
-                await _categoryRepository.UpdateCategoryAsync(category);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "Failed to update category", Details = ex.Message });
-            }
+            category.CategoryName = categoryInput.CategoryName;
+            category.Description = categoryInput.Description;
+
+            await _categoryRepository.UpdateCategoryAsync(category);
+            return NoContent();
         }
         [Authorize(Policy = "AdminOnly")]
         [HttpDelete("{id}")]

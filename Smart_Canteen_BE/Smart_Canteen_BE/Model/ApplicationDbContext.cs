@@ -5,10 +5,7 @@ using Smart_Canteen_BE.Model;
 
 public class ApplicationDbContext : IdentityDbContext<User>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
 
     // DbSet for other models
     public DbSet<Category> Categories { get; set; }
@@ -22,12 +19,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
     {
         base.OnModelCreating(modelBuilder); // Retain Identity configurations
 
-        // Configure relationships
         modelBuilder.Entity<Category>()
-            .HasMany(c => c.Products)
-            .WithOne(p => p.Category)
-            .HasForeignKey(p => p.CategoryId)
-            .OnDelete(DeleteBehavior.SetNull); // Cho phép xóa Category mà không xóa Product.
+           .HasMany(c => c.Products)
+           .WithOne(p => p.Category)
+           .HasForeignKey(p => p.CategoryId)
+           .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Product>()
             .HasMany(p => p.Carts)
@@ -66,7 +62,4 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .OnDelete(DeleteBehavior.Cascade);
 
     }
-
-   
-
 }

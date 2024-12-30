@@ -88,14 +88,27 @@ namespace Smart_Canteen_BE.Controllers
 
         [Authorize(Policy = "AdminOnly")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Product product)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductInputDto productDto)
         {
-            if (id != product.ProductId)
-                return BadRequest();
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound(new { Message = "Product not found" });
+            }
 
-            await _productRepository.UpdateProductAsync(product);
+            product.ProductName = productDto.ProductName;
+            product.Price = productDto.Price;
+            product.Description = productDto.Description;
+            product.Image = productDto.Image;
+            product.Stock = productDto.Stock;
+            product.CategoryId = productDto.CategoryId; // Chỉ cần CategoryId, không cần Category object
+
+            _context.Products.Update(product);
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
+
         [Authorize(Policy = "AdminOnly")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -104,7 +117,30 @@ namespace Smart_Canteen_BE.Controllers
             return NoContent();
         }
 
+        [HttpGet("category/{categoryId}")]
+        public async Task<IActionResult> GetProductsByCategory(int categoryId)
+        {
+            var products = await _context.Products
+                                          .Where(p => p.CategoryId == categoryId)
+                                          .Select(p => new ProductOutputDto
+                                          {
+                                              ProductId = p.ProductId,
+                                              ProductName = p.ProductName,
+                                              Price = p.Price,
+                                              Description = p.Description,
+                                              Image = p.Image,
+                                              Stock = p.Stock,
+                                              CategoryId = p.CategoryId,
+                                              CategoryName = p.Category.CategoryName
+                                          }).ToListAsync();
 
+            if (products == null || !products.Any())
+            {
+                return NotFound(new { Message = "No products found for the specified category." });
+            }
+
+            return Ok(products);
+        }
     }
 
 }

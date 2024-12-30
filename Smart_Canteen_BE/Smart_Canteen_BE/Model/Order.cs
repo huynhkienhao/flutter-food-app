@@ -7,7 +7,7 @@ namespace Smart_Canteen_BE.Model
     {
         public int OrderId { get; set; }
 
-        [Required(ErrorMessage = "UserId is required")]
+        [Required(ErrorMessage = "ID user là bắt buộc")]
         public string UserId { get; set; }
 
         [JsonIgnore] // Loại bỏ khỏi JSON xử lý
@@ -15,7 +15,7 @@ namespace Smart_Canteen_BE.Model
 
         public decimal TotalPrice { get; set; }
 
-        [Required(ErrorMessage = "Status is required")]
+        [Required(ErrorMessage = "Trạng thái là bắt buộc")]
         public string Status { get; set; }
 
         public DateTime OrderTime { get; set; }

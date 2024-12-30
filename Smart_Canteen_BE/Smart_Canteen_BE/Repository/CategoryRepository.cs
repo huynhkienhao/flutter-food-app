@@ -17,9 +17,16 @@ namespace Smart_Canteen_BE.Repository
             return await _context.Categories.ToListAsync();
         }
 
-        public async Task<Category> GetCategoryByIdAsync(int id)
+        public async Task<Category> GetCategoryByIdAsync(int id, bool includeProducts = false)
         {
-            return await _context.Categories.FindAsync(id);
+            if (includeProducts)
+            {
+                return await _context.Categories
+                    .Include(c => c.Products) // Bao gồm sản phẩm
+                    .FirstOrDefaultAsync(c => c.CategoryId == id);
+            }
+
+            return await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
         public async Task AddCategoryAsync(Category category)
