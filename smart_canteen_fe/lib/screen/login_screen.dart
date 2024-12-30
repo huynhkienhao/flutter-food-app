@@ -72,13 +72,26 @@ class _LoginScreenState extends State<LoginScreen> {
             throw Exception("Thông tin phản hồi từ API không đầy đủ.");
           }
         } else {
+          // Hiển thị thông báo lỗi khi đăng nhập sai
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Login failed: ${response['message']}")),
+            SnackBar(
+              content: Text(
+                "Đăng nhập sai mật khẩu",
+                style: TextStyle(color: Colors.white), // Màu chữ trắng
+              ),
+              backgroundColor: Colors.red, // Màu nền đỏ
+            ),
           );
         }
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${error.toString()}")),
+          SnackBar(
+            content: Text(
+              "Đăng nhập sai mật khẩu",
+              style: TextStyle(color: Colors.white), // Màu chữ trắng
+            ),
+            backgroundColor: Colors.red, // Màu nền đỏ
+          ),
         );
       } finally {
         setState(() {
@@ -87,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

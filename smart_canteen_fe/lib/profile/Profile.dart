@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
-import '../update_user/UpdateUserScreen.dart';
-
+import '../settings/settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -42,8 +41,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading user details: $e")),
+        SnackBar(content: Text("Lỗi tải thông tin người dùng: $e")),
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -51,48 +53,120 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'user Details',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('user ID: $userId'),
-            Text('Email: $email'),
-            Text('Full Name: $fullName'),
-            Text('Phone Number: $phoneNumber'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final updated = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UpdateUserScreen(
-                      userId: userId!,
-                      email: email,
-                      fullName: fullName,
-                      phoneNumber: phoneNumber,
-                    ),
+        title: Text(
+          'Thông tin cá nhân',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(
+                    userId: userId,
+                    email: email,
+                    fullName: fullName,
+                    phoneNumber: phoneNumber,
                   ),
-                );
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        color: Colors.green[50], // Màu nền xanh lá nhạt
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          child: Column(
+            children: [
+              // Phần trên: Avatar và tên người dùng
+              Container(
+                color: Colors.green.shade100,
+                padding: EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.brown.shade300, // Màu xám nâu
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          fullName ?? "Tên người dùng",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade900, // Màu xanh đậm
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          email ?? "Email người dùng",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.green.shade700, // Màu xanh nhạt hơn
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
 
-                if (updated == true) {
-                  _loadUserDetails();
-                }
-              },
-              child: Text("Update user Info"),
-            ),
-          ],
+              SizedBox(height: 20),
+
+              // Phần thông tin chi tiết
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow("Số điện thoại:", phoneNumber ?? "Không có"),
+                    Divider(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String title, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade900,
+          ),
+        ),
+      ],
     );
   }
 }

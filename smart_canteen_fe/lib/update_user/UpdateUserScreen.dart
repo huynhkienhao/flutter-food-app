@@ -55,13 +55,13 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
           );
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("user updated successfully!")),
+            SnackBar(content: Text("Cập nhật thông tin thành công!")),
           );
 
-          Navigator.pop(context, true); // Quay lại HomeScreen và làm mới giao diện
+          Navigator.pop(context, true);
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to update user: $e")),
+            SnackBar(content: Text("Không thể cập nhật thông tin: $e")),
           );
         }
       }
@@ -71,67 +71,170 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Update user Info")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                initialValue: fullName,
-                decoration: InputDecoration(labelText: "Full Name"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Full name is required";
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  fullName = value;
-                },
-              ),
-              TextFormField(
-                initialValue: email,
-                decoration: InputDecoration(labelText: "Email"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Email is required";
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return "Invalid email format";
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  email = value;
-                },
-              ),
-              TextFormField(
-                initialValue: phoneNumber,
-                decoration: InputDecoration(labelText: "Phone Number"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Phone number is required";
-                  }
-                  if (!RegExp(r'^\d+$').hasMatch(value)) {
-                    return "Phone number must contain only digits";
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  phoneNumber = value;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _updateUser,
-                child: Text("Update"),
-              ),
-            ],
+      appBar: AppBar(
+        title: Text(
+          "Cập nhật thông tin cá nhân",
+          style: TextStyle(
+            color: Colors.white,
           ),
         ),
+        backgroundColor: Colors.green,
       ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              color: Colors.green.shade100,
+              padding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.green,
+                    child: Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Cập nhật tài khoản",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Chỉnh sửa thông tin cá nhân",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Form
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildFormField(
+                      initialValue: fullName,
+                      label: "Họ và tên",
+                      icon: Icons.person,
+                      onSaved: (value) => fullName = value,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Vui lòng nhập họ và tên";
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildFormField(
+                      initialValue: email,
+                      label: "Email",
+                      icon: Icons.email,
+                      onSaved: (value) => email = value,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Vui lòng nhập email";
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return "Email không hợp lệ";
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildFormField(
+                      initialValue: phoneNumber,
+                      label: "Số điện thoại",
+                      icon: Icons.phone,
+                      onSaved: (value) => phoneNumber = value,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Vui lòng nhập số điện thoại";
+                        }
+                        if (!RegExp(r'^(03|05|07|08|09)\d{8}$')
+                            .hasMatch(value)) {
+                          return "Số điện thoại không hợp lệ (VD: 0901234567)";
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _updateUser,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 30,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              25), // Điều chỉnh bo góc tại đây
+                        ),
+                      ),
+                      child: Text(
+                        "Cập nhật",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormField({
+    required String? initialValue,
+    required String label,
+    required IconData icon,
+    required FormFieldSetter<String> onSaved,
+    required FormFieldValidator<String> validator,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.green),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.green.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.green),
+        ),
+      ),
+      onSaved: onSaved,
+      validator: validator,
     );
   }
 }

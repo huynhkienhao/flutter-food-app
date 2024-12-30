@@ -8,7 +8,10 @@ class ProductsByCategoryScreen extends StatefulWidget {
   final int categoryId;
   final String categoryName;
 
-  ProductsByCategoryScreen({required this.categoryId, required this.categoryName});
+  ProductsByCategoryScreen({
+    required this.categoryId,
+    required this.categoryName,
+  });
 
   @override
   _ProductsByCategoryScreenState createState() =>
@@ -21,12 +24,31 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
   List<dynamic> products = [];
   bool isLoading = true;
 
-  void _addToCart(int productId) async {
+  void _addToCart(dynamic productId) async {
+    if (productId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "ID sản phẩm không hợp lệ.",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("user_id");
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("user not logged in.")),
+        SnackBar(
+          content: Text(
+            "Bạn chưa đăng nhập!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -34,11 +56,23 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     try {
       await cartService.addToCart(userId, productId, 1);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("product added to cart.")),
+        SnackBar(
+          content: Text(
+            "Sản phẩm đã thêm vào giỏ hàng!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to add product to cart.")),
+        SnackBar(
+          content: Text(
+            "Không thể thêm sản phẩm vào giỏ hàng.",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -51,15 +85,16 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
 
   Future<void> _loadProducts() async {
     try {
-      final data = await productService.getProductsByCategory(
-          widget.categoryId);
+      final data =
+      await productService.getProductsByCategory(widget.categoryId);
       setState(() {
-        products = data;
+        products = data ?? [];
         isLoading = false;
       });
     } catch (e) {
       print("Error loading products: $e");
       setState(() {
+        products = [];
         isLoading = false;
       });
     }
@@ -69,7 +104,13 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Products in ${widget.categoryName}"),
+        title: Text(
+          "Sản phẩm: ${widget.categoryName}",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green, // Đổi màu AppBar thành xanh lá
         actions: [
           IconButton(
             icon: Icon(Icons.shopping_cart),
@@ -82,21 +123,121 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final product = products[index];
-          return ListTile(
-            title: Text(product['productName']),
-            subtitle: Text('Price: \$${product['price']}'),
-            trailing: ElevatedButton(
-              onPressed: () => _addToCart(product['productId']),
-              child: Text("Add to Cart"),
-            ),
-          );
-        },
+      body: Container(
+        color: Colors.green[50], // Màu nền xanh lá nhạt
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : products.isEmpty
+            ? Center(
+          child: Text(
+            "Không có sản phẩm nào.",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        )
+            : GridView.builder(
+          padding: const EdgeInsets.all(8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 0.75,
+          ),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            final productName =
+                product['productName'] ?? "Không có tên";
+            final price = product['price'] != null
+                ? product['price'].toString()
+                : "0.0";
+            final imageUrl = product['imageUrl'] ??
+                'https://via.placeholder.com/150'; // Placeholder ảnh.
+
+            return Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Hình ảnh sản phẩm
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  // Tên và giá sản phẩm
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          productName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Giá: \$${price}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Nút thêm vào giỏ hàng
+                  Padding(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          _addToCart(product['productId']),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                        Colors.green, // Đặt màu nền là xanh lá
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        "Thêm vào giỏ",
+                        style: TextStyle(
+                          color: Colors.white, // Màu chữ là trắng
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

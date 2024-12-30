@@ -49,24 +49,24 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(category == null ? "Add category" : "Edit category"),
+          title: Text(category == null ? "Thêm danh mục" : "Chỉnh sửa danh mục"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: "category Name"),
+                decoration: InputDecoration(labelText: "Tên danh mục"),
               ),
               TextField(
                 controller: descriptionController,
-                decoration: InputDecoration(labelText: "Description"),
+                decoration: InputDecoration(labelText: "Mô tả"),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
+              child: Text("Hủy"),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -88,7 +88,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   print("Error saving category: $e");
                 }
               },
-              child: Text(category == null ? "Add" : "Save"),
+              child: Text(category == null ? "Thêm" : "Lưu"),
             ),
           ],
         );
@@ -121,39 +121,79 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("category Management"),
+        title: Text(
+          "Quản lý danh mục",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green,
       ),
-      body: ListView.builder(
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return ListTile(
-            onTap: () =>
-                _navigateToProducts(category['categoryId'], category['categoryName']),
-            title: Text(category['categoryName']),
-            subtitle: Text(category['description']),
-            trailing: userRole == 'admin'
-                ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => _showCategoryDialog(category: category),
+      body: Container(
+        color: Colors.green[50], // Màu nền xanh lá nhạt
+        child: ListView.builder(
+          itemCount: categories.length,
+          padding: const EdgeInsets.all(10),
+          itemBuilder: (context, index) {
+            final category = categories[index];
+            return Card(
+              elevation: 2, // Hiệu ứng nổi nhẹ
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: Colors.green.shade200), // Viền xanh lá
+              ),
+              child: ListTile(
+                onTap: () => _navigateToProducts(
+                  category['categoryId'],
+                  category['categoryName'],
                 ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () =>
-                      _deleteCategory(category['categoryId']),
+                leading: Icon(
+                  Icons.category,
+                  size: 40,
+                  color: Colors.green, // Biểu tượng xanh lá
                 ),
-              ],
-            )
-                : null,
-          );
-        },
+                title: Text(
+                  category['categoryName'],
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                subtitle: Text(
+                  category['description'],
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700], // Màu chữ mô tả
+                  ),
+                ),
+                trailing: userRole == 'admin'
+                    ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.green),
+                      onPressed: () =>
+                          _showCategoryDialog(category: category),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () =>
+                          _deleteCategory(category['categoryId']),
+                    ),
+                  ],
+                )
+                    : null,
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: userRole == 'admin'
           ? FloatingActionButton(
         onPressed: () => _showCategoryDialog(),
+        backgroundColor: Colors.green,
         child: Icon(Icons.add),
       )
           : null,

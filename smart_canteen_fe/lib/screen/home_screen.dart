@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/auth_service.dart';
-import 'login_screen.dart';
+import '../../services/product_service.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,93 +8,106 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AuthService authService = AuthService();
-  String? userId;
-  String? email;
+  final ProductService productService = ProductService();
+  List<dynamic> products = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserDetails();
+    _loadProducts();
   }
 
-  Future<void> _loadUserDetails() async {
+  Future<void> _loadProducts() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-      final userId = prefs.getString("user_id");
-      final email = prefs.getString("user_email");
-
-      print("Token: $token");
-      print("UserId: $userId");
-      print("Email: $email");
-
-      if (token != null && userId != null && email != null) {
-        setState(() {
-          this.userId = userId;
-          this.email = email;
-          isLoading = false;
-        });
-      } else {
-        print("Token hoặc UserId hoặc email không tồn tại. Đăng xuất...");
-        _logout();
-      }
+      final data = await productService.getProducts();
+      setState(() {
+        products = data ?? [];
+        isLoading = false;
+      });
     } catch (e) {
-      print("Error in _loadUserDetails: $e");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading user details: $e")),
-      );
-
-      _logout();
+      print("Error loading products: $e");
+      setState(() {
+        products = [];
+        isLoading = false;
+      });
     }
-  }
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove("jwt_token");
-    // await prefs.remove("user_id");
-    // await prefs.remove("user_email");
-
-    await prefs.clear();
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-          (route) => false,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : products.isEmpty
+        ? Center(
+      child: Text(
+        "Không có sản phẩm nào.",
+        style: TextStyle(fontSize: 16, color: Colors.grey),
+      ),
+    )
+        : GridView.builder(
+      padding: EdgeInsets.all(10),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'user Details',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('user ID: $userId'),
-            Text('Email: $email'),
-          ],
-        ),
-      ),
+          elevation: 4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Hiển thị hình ảnh sản phẩm
+              Expanded(
+                child: ClipRRect(
+                  borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.network(
+                    product['imageUrl'] ?? 'https://via.placeholder.com/150',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.broken_image, size: 50);
+                    },
+                  ),
+                ),
+              ),
+              // Hiển thị thông tin sản phẩm
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product['productName'] ?? "Không có tên",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Giá: ${product['price'] ?? 0} VND',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

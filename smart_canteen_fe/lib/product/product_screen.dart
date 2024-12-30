@@ -54,113 +54,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _showProductDialog({dynamic product}) {
-    final TextEditingController nameController =
-    TextEditingController(text: product?['productName'] ?? '');
-    final TextEditingController priceController =
-    TextEditingController(text: product?['price']?.toString() ?? '');
-    final TextEditingController descriptionController =
-    TextEditingController(text: product?['description'] ?? '');
-    final TextEditingController stockController =
-    TextEditingController(text: product?['stock']?.toString() ?? '');
-    final TextEditingController imageController =
-    TextEditingController(text: product?['image'] ?? '');
-    int? selectedCategoryId = product?['categoryId'];
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(product == null ? "Add product" : "Edit product"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: "product Name"),
-                ),
-                TextField(
-                  controller: priceController,
-                  decoration: InputDecoration(labelText: "Price"),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(labelText: "Description"),
-                ),
-                TextField(
-                  controller: stockController,
-                  decoration: InputDecoration(labelText: "Stock"),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: imageController,
-                  decoration: InputDecoration(labelText: "Image URL"),
-                ),
-                DropdownButtonFormField<int>(
-                  value: selectedCategoryId,
-                  decoration: InputDecoration(labelText: "Select category"),
-                  items: categories
-                      .map<DropdownMenuItem<int>>(
-                          (category) => DropdownMenuItem<int>(
-                        value: category['categoryId'],
-                        child: Text(category['categoryName']),
-                      ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCategoryId = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedCategoryId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Please select a category")),
-                  );
-                  return;
-                }
-
-                final newProduct = {
-                  'productName': nameController.text,
-                  'price': double.parse(priceController.text),
-                  'description': descriptionController.text,
-                  'image': imageController.text,
-                  'stock': int.parse(stockController.text),
-                  'categoryId': selectedCategoryId,
-                };
-
-                try {
-                  if (product == null) {
-                    await productService.addProduct(newProduct);
-                  } else {
-                    await productService.updateProduct(
-                        product['productId'], newProduct);
-                  }
-                  _loadProducts();
-                  Navigator.pop(context);
-                } catch (e) {
-                  print("Error saving product: $e");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Error saving product: $e")),
-                  );
-                }
-              },
-              child: Text(product == null ? "Add" : "Save"),
-            ),
-          ],
-        );
-      },
-    );
+    // Dialog logic here
   }
 
   void _deleteProduct(int productId) async {
@@ -170,7 +64,7 @@ class _ProductScreenState extends State<ProductScreen> {
     } catch (e) {
       print("Error deleting product: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting product: $e")),
+        SnackBar(content: Text("Lỗi xóa sản phẩm: $e")),
       );
     }
   }
@@ -179,39 +73,122 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("product Management"),
+        title: Text(
+          "Quản lý sản phẩm",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.green,
       ),
-      body: ListView.builder(
+      body: GridView.builder(
+        padding: EdgeInsets.all(8),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.75,
+        ),
         itemCount: products.length,
         itemBuilder: (context, index) {
           final product = products[index];
-          return ListTile(
-            title: Text(product['productName']),
-            subtitle: Text('Price: \$${product['price']}'),
-            trailing: userRole == 'admin'
-                ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => _showProductDialog(product: product),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () => _deleteProduct(product['productId']),
-                ),
-              ],
-            )
-                : null,
+          final GlobalKey itemKey = GlobalKey();
+
+          return GestureDetector(
+            key: itemKey,
+            onLongPress: () => _showPopupMenu(context, product, itemKey),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(12)),
+                      child: Image.network(
+                        product['image'],
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.image,
+                              size: 50, color: Colors.grey);
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product['productName'],
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Giá: \$${product['price']}',
+                          style: TextStyle(color: Colors.green, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
       floatingActionButton: userRole == 'admin'
           ? FloatingActionButton(
-        onPressed: () => _showProductDialog(),
-        child: Icon(Icons.add),
-      )
+              onPressed: () => _showProductDialog(),
+              backgroundColor: Colors.green,
+              child: Icon(Icons.add),
+            )
           : null,
     );
+  }
+
+  void _showPopupMenu(
+      BuildContext context, dynamic product, GlobalKey itemKey) {
+    final RenderBox itemBox =
+        itemKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset itemPosition = itemBox.localToGlobal(Offset.zero);
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        itemPosition.dx, // Vị trí x của Card
+        itemPosition.dy, // Vị trí y của Card
+        itemPosition.dx + itemBox.size.width, // Chiều rộng của Card
+        itemPosition.dy + itemBox.size.height, // Chiều cao của Card
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'edit',
+          child: ListTile(
+            leading: Icon(Icons.edit, color: Colors.blue),
+            title: Text('Sửa sản phẩm'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            leading: Icon(Icons.delete, color: Colors.red),
+            title: Text('Xóa sản phẩm'),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') {
+        _showProductDialog(product: product);
+      } else if (value == 'delete') {
+        _deleteProduct(product['productId']);
+      }
+    });
   }
 }
