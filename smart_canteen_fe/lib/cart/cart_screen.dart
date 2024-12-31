@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/cart_service.dart';
+import '../../../services/cart_service.dart';
+import '../Order/order_screen.dart';
 
 class CartScreen extends StatefulWidget {
   @override
@@ -57,45 +58,88 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  void _createOrder() async {
+    try {
+      final cartIds = cartItems.map((item) => item['cartId'] as int).toList();
+
+      if (cartIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Giỏ hàng rỗng. Không thể tạo hóa đơn.")),
+        );
+        return;
+      }
+
+      final orderData = await cartService.createOrder(cartIds);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderScreen(orderData: orderData),
+        ),
+      );
+    } catch (e) {
+      print("Error creating order: $e");
+
+      // Hiển thị lỗi chi tiết
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi: Không thể tạo hóa đơn. Vui lòng kiểm tra lại giỏ hàng.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(
-        "Giỏ hàng của tôi",
-        style: TextStyle(color: Colors.white),
-      )),
+        title: Text(
+          "Giỏ hàng của tôi",
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : cartItems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 100,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        "Giỏ hàng trống",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: cartItems.length,
-                  itemBuilder: (context, index) {
-                    final item = cartItems[index];
-                    return _buildCartItem(item, index);
-                  },
-                ),
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: 100,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 20),
+            Text(
+              "Giỏ hàng trống",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      )
+          : Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: cartItems.length,
+              itemBuilder: (context, index) {
+                final item = cartItems[index];
+                return _buildCartItem(item, index);
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: _createOrder,
+              child: Text("Xuất hóa đơn"),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -103,7 +147,6 @@ class _CartScreenState extends State<CartScreen> {
     return Dismissible(
       key: ValueKey(item['cartId']),
       direction: DismissDirection.endToStart,
-      // Vuốt từ phải sang trái
       onDismissed: (direction) {
         _removeItem(item['cartId'], index);
       },

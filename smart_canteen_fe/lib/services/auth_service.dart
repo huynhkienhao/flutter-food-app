@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config_url/config.dart';
 
+
 class AuthService {
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -13,15 +14,9 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
-
-      if (data['status'] == true) {
-        return data;
-      } else {
-        throw Exception(data['message'] ?? "Đăng nhập thất bại");
-      }
+      return json.decode(response.body);
     } else {
-      throw Exception("Không đăng nhập được: ${response.statusCode}");
+      throw Exception("Failed to login: ${response.statusCode}");
     }
   }
 
@@ -36,24 +31,19 @@ class AuthService {
         'username': username,
         'email': email,
         'password': password,
-        'fullName': fullName,
-        'role': role,
       }),
     );
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception("Không đăng ký được: ${response.statusCode}");
+      throw Exception("Failed to register: ${response.statusCode}");
     }
   }
 
-  // Lấy thông tin chi tiết của user
+  // Lấy thông tin chi tiết của User
   Future<Map<String, dynamic>> getUserDetails(String userId, String token) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/user/$userId");
-    print("Đang lấy thông tin chi tiết người dùng cho URL: $url");
-    print("Authorization Token: $token");
-
+    final url = Uri.parse("${Config.apiBaseUrl}/User/$userId");
     final response = await http.get(
       url,
       headers: {
@@ -63,18 +53,16 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      print("Đã lấy thông tin chi tiết người dùng thành công: ${response.body}");
-      return json.decode(response.body) as Map<String, dynamic>;
+      return json.decode(response.body);
     } else {
-      print("Không thể lấy thông tin chi tiết người dùng: ${response.statusCode}, ${response.body}");
-      throw Exception("Không thể lấy thông tin chi tiết người dùng: ${response.statusCode}");
+      throw Exception("Failed to fetch user details: ${response.statusCode}");
     }
   }
 
-  // Cập nhật thông tin user
+  // Cập nhật thông tin User
   Future<void> updateUser(
       String userId, Map<String, dynamic> userData, String token) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/user/$userId");
+    final url = Uri.parse("${Config.apiBaseUrl}/User/$userId");
     final response = await http.put(
       url,
       headers: {
@@ -88,4 +76,5 @@ class AuthService {
       throw Exception("Failed to update user: ${response.statusCode}");
     }
   }
+
 }

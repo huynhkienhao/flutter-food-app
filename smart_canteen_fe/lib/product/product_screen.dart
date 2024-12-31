@@ -54,7 +54,114 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _showProductDialog({dynamic product}) {
-    // Dialog logic here
+    final TextEditingController nameController =
+    TextEditingController(text: product?['productName'] ?? '');
+    final TextEditingController priceController =
+    TextEditingController(text: product?['price']?.toString() ?? '');
+    final TextEditingController descriptionController =
+    TextEditingController(text: product?['description'] ?? '');
+    final TextEditingController stockController =
+    TextEditingController(text: product?['stock']?.toString() ?? '');
+    final TextEditingController imageController =
+    TextEditingController(text: product?['image'] ?? '');
+    int? selectedCategoryId = product?['categoryId'];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(product == null ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: "Tên sản phẩm"),
+                ),
+                TextField(
+                  controller: priceController,
+                  decoration: InputDecoration(labelText: "Giá"),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(labelText: "Mô tả"),
+                ),
+                TextField(
+                  controller: stockController,
+                  decoration: InputDecoration(labelText: "Tồn kho"),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: imageController,
+                  decoration: InputDecoration(labelText: "URL hình ảnh"),
+                ),
+                DropdownButtonFormField<int>(
+                  value: selectedCategoryId,
+                  decoration: InputDecoration(labelText: "Chọn danh mục"),
+                  items: categories
+                      .map<DropdownMenuItem<int>>(
+                        (category) => DropdownMenuItem<int>(
+                      value: category['categoryId'],
+                      child: Text(category['categoryName']),
+                    ),
+                  )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCategoryId = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Hủy"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (selectedCategoryId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Vui lòng chọn danh mục")),
+                  );
+                  return;
+                }
+
+                final newProduct = {
+                  'productName': nameController.text,
+                  'price': double.parse(priceController.text),
+                  'description': descriptionController.text,
+                  'image': imageController.text,
+                  'stock': int.parse(stockController.text),
+                  'categoryId': selectedCategoryId,
+                };
+
+                try {
+                  if (product == null) {
+                    await productService.addProduct(newProduct);
+                  } else {
+                    await productService.updateProduct(
+                        product['productId'], newProduct);
+                  }
+                  _loadProducts();
+                  Navigator.pop(context);
+                } catch (e) {
+                  print("Error saving product: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Lỗi lưu sản phẩm: $e")),
+                  );
+                }
+              },
+              child: Text(product == null ? "Thêm" : "Lưu"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _deleteProduct(int productId) async {
@@ -67,6 +174,45 @@ class _ProductScreenState extends State<ProductScreen> {
         SnackBar(content: Text("Lỗi xóa sản phẩm: $e")),
       );
     }
+  }
+
+  void _showPopupMenu(
+      BuildContext context, dynamic product, GlobalKey itemKey) {
+    final RenderBox itemBox =
+    itemKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset itemPosition = itemBox.localToGlobal(Offset.zero);
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        itemPosition.dx,
+        itemPosition.dy,
+        itemPosition.dx + itemBox.size.width,
+        itemPosition.dy + itemBox.size.height,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'edit',
+          child: ListTile(
+            leading: Icon(Icons.edit, color: Colors.blue),
+            title: Text('Sửa sản phẩm'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            leading: Icon(Icons.delete, color: Colors.red),
+            title: Text('Xóa sản phẩm'),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') {
+        _showProductDialog(product: product);
+      } else if (value == 'delete') {
+        _deleteProduct(product['productId']);
+      }
+    });
   }
 
   @override
@@ -106,7 +252,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   Expanded(
                     child: ClipRRect(
                       borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(12)),
+                      BorderRadius.vertical(top: Radius.circular(12)),
                       child: Image.network(
                         product['image'],
                         fit: BoxFit.contain,
@@ -143,52 +289,13 @@ class _ProductScreenState extends State<ProductScreen> {
           );
         },
       ),
-      floatingActionButton: userRole == 'admin'
+      floatingActionButton: userRole == 'Admin' || userRole == 'admin'
           ? FloatingActionButton(
-              onPressed: () => _showProductDialog(),
-              backgroundColor: Colors.green,
-              child: Icon(Icons.add),
-            )
+        onPressed: () => _showProductDialog(),
+        backgroundColor: Colors.green,
+        child: Icon(Icons.add),
+      )
           : null,
     );
-  }
-
-  void _showPopupMenu(
-      BuildContext context, dynamic product, GlobalKey itemKey) {
-    final RenderBox itemBox =
-        itemKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset itemPosition = itemBox.localToGlobal(Offset.zero);
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        itemPosition.dx, // Vị trí x của Card
-        itemPosition.dy, // Vị trí y của Card
-        itemPosition.dx + itemBox.size.width, // Chiều rộng của Card
-        itemPosition.dy + itemBox.size.height, // Chiều cao của Card
-      ),
-      items: [
-        PopupMenuItem(
-          value: 'edit',
-          child: ListTile(
-            leading: Icon(Icons.edit, color: Colors.blue),
-            title: Text('Sửa sản phẩm'),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ListTile(
-            leading: Icon(Icons.delete, color: Colors.red),
-            title: Text('Xóa sản phẩm'),
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'edit') {
-        _showProductDialog(product: product);
-      } else if (value == 'delete') {
-        _deleteProduct(product['productId']);
-      }
-    });
   }
 }

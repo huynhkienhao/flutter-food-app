@@ -66,13 +66,11 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                     );
-
                     if (updated == true) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Thông tin đã được cập nhật.")),
-                      );
+                      Navigator.pop(context, true); // Trả về trạng thái đã cập nhật
                     }
                   },
+
                 ),
                 Divider(),
               ],

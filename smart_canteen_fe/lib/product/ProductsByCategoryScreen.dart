@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/cart_service.dart';
 import '../../services/product_service.dart';
-import '../cart/cart_screen.dart';
+import '../Cart/cart_screen.dart';
 
 class ProductsByCategoryScreen extends StatefulWidget {
   final int categoryId;
@@ -21,8 +21,31 @@ class ProductsByCategoryScreen extends StatefulWidget {
 class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
   final ProductService productService = ProductService();
   final CartService cartService = CartService();
+
   List<dynamic> products = [];
   bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final data = await productService.getProductsByCategory(widget.categoryId);
+      setState(() {
+        products = data ?? [];
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error loading products: $e");
+      setState(() {
+        products = [];
+        isLoading = false;
+      });
+    }
+  }
 
   void _addToCart(dynamic productId) async {
     if (productId == null) {
@@ -78,39 +101,14 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
-
-  Future<void> _loadProducts() async {
-    try {
-      final data =
-      await productService.getProductsByCategory(widget.categoryId);
-      setState(() {
-        products = data ?? [];
-        isLoading = false;
-      });
-    } catch (e) {
-      print("Error loading products: $e");
-      setState(() {
-        products = [];
-        isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
           "Sản phẩm: ${widget.categoryName}",
-          style: TextStyle(
-            color: Colors.white,
-          ),
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.green, // Đổi màu AppBar thành xanh lá
+        backgroundColor: Colors.green,
         actions: [
           IconButton(
             icon: Icon(Icons.shopping_cart),
@@ -124,7 +122,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
         ],
       ),
       body: Container(
-        color: Colors.green[50], // Màu nền xanh lá nhạt
+        color: Colors.green[50],
         child: isLoading
             ? Center(child: CircularProgressIndicator())
             : products.isEmpty
@@ -151,7 +149,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                 ? product['price'].toString()
                 : "0.0";
             final imageUrl = product['imageUrl'] ??
-                'https://via.placeholder.com/150'; // Placeholder ảnh.
+                'https://via.placeholder.com/150';
 
             return Card(
               shape: RoundedRectangleBorder(
@@ -161,7 +159,6 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Hình ảnh sản phẩm
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.vertical(
@@ -183,7 +180,6 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                       ),
                     ),
                   ),
-                  // Tên và giá sản phẩm
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
@@ -209,16 +205,13 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                       ],
                     ),
                   ),
-                  // Nút thêm vào giỏ hàng
                   Padding(
                     padding:
                     const EdgeInsets.symmetric(horizontal: 8.0),
                     child: ElevatedButton(
-                      onPressed: () =>
-                          _addToCart(product['productId']),
+                      onPressed: () => _addToCart(product['productId']),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                        Colors.green, // Đặt màu nền là xanh lá
+                        backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -226,7 +219,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                       child: Text(
                         "Thêm vào giỏ",
                         style: TextStyle(
-                          color: Colors.white, // Màu chữ là trắng
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

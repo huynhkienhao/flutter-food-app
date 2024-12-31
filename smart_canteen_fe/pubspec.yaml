@@ -19,7 +19,8 @@ dependencies:
   jwt_decode: ^0.3.1
   jwt_decoder: ^2.0.1
   cupertino_icons: ^1.0.8
-
+  qr_flutter: ^4.1.0
+  barcode_scan2: ^4.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config_url/config.dart';
 
 class ProductService {
-  final String baseUrl = "${Config.apiBaseUrl}/product";
+  final String baseUrl = "${Config.apiBaseUrl}/Product";
 
   Future<List<dynamic>> getProducts() async {
     try {
@@ -170,5 +170,19 @@ class ProductService {
       rethrow;
     }
   }
+  Future<String> getProductName(int productId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("jwt_token");
+    final response = await http.get(
+      Uri.parse("${Config.apiBaseUrl}/Product/$productId"),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
+    if (response.statusCode == 200) {
+      final productData = json.decode(response.body);
+      return productData['productName'];
+    } else {
+      throw Exception("Failed to fetch product name.");
+    }
+  }
 }

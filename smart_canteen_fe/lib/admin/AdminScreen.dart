@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../QrCode/qr_code_scanner.dart';
+import '../Order/order_history_admin.dart';
 import '../Category/category_screen.dart';
 import '../Product/product_screen.dart';
 import '../screen/login_screen.dart';
-import '../profile/Profile.dart';
+import '../Profile/Profile.dart';
+import 'UserManagementAdminScreen.dart';
 
 class AdminScreen extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
@@ -23,7 +26,7 @@ class AdminScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           "Bảng điều khiển Admin",
-          style: TextStyle(fontSize: 24, color: Colors.white), // Tiêu đề tiếng Việt
+          style: TextStyle(fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.green,
         actions: [
@@ -86,6 +89,48 @@ class AdminScreen extends StatelessWidget {
                   ),
                   _buildDashboardCard(
                     context,
+                    title: "Quản lý hóa đơn",
+                    icon: Icons.receipt,
+                    color: Colors.redAccent,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderHistoryAdminScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    context,
+                    title: "Quản lý người dùng",
+                    icon: Icons.people,
+                    color: Colors.purpleAccent,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserManagementAdminScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    context,
+                    title: "Quét mã QR",
+                    icon: Icons.qr_code_scanner,
+                    color: Colors.teal,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QrCodeScanner(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    context,
                     title: "Xem hồ sơ",
                     icon: Icons.person,
                     color: Colors.orangeAccent,
@@ -97,7 +142,16 @@ class AdminScreen extends StatelessWidget {
                         ),
                       );
                     },
-                  )
+                  ),
+                  _buildDashboardCard(
+                    context,
+                    title: "Đăng xuất",
+                    icon: Icons.logout,
+                    color: Colors.grey,
+                    onTap: () {
+                      _logout(context);
+                    },
+                  ),
                 ],
               ),
             ],

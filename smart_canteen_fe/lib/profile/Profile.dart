@@ -63,8 +63,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final updated = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SettingsScreen(
@@ -75,6 +75,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               );
+              if (updated == true) {
+                setState(() {
+                  isLoading = true; // Hiển thị vòng tròn tải
+                });
+                await _loadUserDetails(); // Tải lại dữ liệu
+              }
             },
           ),
         ],
@@ -84,65 +90,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: isLoading
             ? Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-          child: Column(
-            children: [
-              // Phần trên: Avatar và tên người dùng
-              Container(
-                color: Colors.green.shade100,
-                padding: EdgeInsets.all(16.0),
-                child: Row(
+                child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.brown.shade300, // Màu xám nâu
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.white,
+                    // Phần trên: Avatar và tên người dùng
+                    Container(
+                      color: Colors.green.shade100,
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor:
+                                Colors.brown.shade300, // Màu xám nâu
+                            child: Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                fullName ?? "Tên người dùng",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade900, // Màu xanh đậm
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                email ?? "Email người dùng",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors
+                                      .green.shade700, // Màu xanh nhạt hơn
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          fullName ?? "Tên người dùng",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade900, // Màu xanh đậm
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          email ?? "Email người dùng",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.green.shade700, // Màu xanh nhạt hơn
-                          ),
-                        ),
-                      ],
+
+                    SizedBox(height: 20),
+
+                    // Phần thông tin chi tiết
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(
+                              "Số điện thoại:", phoneNumber ?? "Không có"),
+                          Divider(),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              SizedBox(height: 20),
-
-              // Phần thông tin chi tiết
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInfoRow("Số điện thoại:", phoneNumber ?? "Không có"),
-                    Divider(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

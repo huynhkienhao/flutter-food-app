@@ -49,7 +49,9 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(category == null ? "Thêm danh mục" : "Chỉnh sửa danh mục"),
+          title: Text(
+            category == null ? "Thêm danh mục" : "Chỉnh sửa danh mục",
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -168,7 +170,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                     color: Colors.grey[700], // Màu chữ mô tả
                   ),
                 ),
-                trailing: userRole == 'admin'
+                trailing: userRole == 'Admin' || userRole == 'admin'
                     ? Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -190,7 +192,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           },
         ),
       ),
-      floatingActionButton: userRole == 'admin'
+      floatingActionButton: userRole == 'Admin' || userRole == 'admin'
           ? FloatingActionButton(
         onPressed: () => _showCategoryDialog(),
         backgroundColor: Colors.green,

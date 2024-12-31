@@ -247,7 +247,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       textAlign: TextAlign.center, // Căn giữa dòng chữ
                     ),
-
                   ],
                 ),
               ),

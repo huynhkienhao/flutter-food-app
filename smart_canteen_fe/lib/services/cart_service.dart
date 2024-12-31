@@ -72,4 +72,49 @@ class CartService {
       throw Exception("Failed to remove item from cart.");
     }
   }
+
+  Future<Map<String, dynamic>> createOrder(List<int> cartIds) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Lấy token từ SharedPreferences
+    final token = prefs.getString("jwt_token");
+    if (token == null) {
+      throw Exception("Authentication token not found. Please log in again.");
+    }
+
+    // Lấy userId từ SharedPreferences
+    final userId = prefs.getString("user_id");
+    if (userId == null) {
+      throw Exception("User ID not found. Please log in again.");
+    }
+
+    try {
+      final url = "${Config.apiBaseUrl}/order";
+      print("Calling API: $url with UserID: $userId and Cart IDs: $cartIds");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'userId': userId,
+          'cartIds': cartIds,
+        }),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 201) {
+        return json.decode(response.body); // Trả về dữ liệu hóa đơn
+      } else {
+        throw Exception("Failed to create order: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error in createOrder: $e");
+      rethrow;
+    }
+  }
 }

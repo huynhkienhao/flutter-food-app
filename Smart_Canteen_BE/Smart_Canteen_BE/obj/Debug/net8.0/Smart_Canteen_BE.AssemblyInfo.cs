@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Smart_Canteen_BE")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+461f505fba8055dc987738bdba7fbabb8be34f7c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b85341f569b0745ff1cbe2f9d26ed62942e40701")]
 [assembly: System.Reflection.AssemblyProductAttribute("Smart_Canteen_BE")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Smart_Canteen_BE")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,3 +1,3 @@
 class Config {
-  static const String apiBaseUrl = "https://largesparklypage3.conveyor.cloud/api";
+  static const String apiBaseUrl = "https://earlysageshop67.conveyor.cloud/api";
 }
