@@ -59,7 +59,7 @@ class OrderService {
 
     // Gọi API với endpoint để lấy toàn bộ lịch sử đơn hàng
     final response = await http.get(
-      Uri.parse("https://earlysageshop67.conveyor.cloud/api/order"),
+      Uri.parse("https://longtanshop39.conveyor.cloud/api/order"),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

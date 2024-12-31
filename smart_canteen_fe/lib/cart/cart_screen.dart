@@ -51,6 +51,9 @@ class _CartScreenState extends State<CartScreen> {
       setState(() {
         cartItems.removeAt(index);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Đã xóa sản phẩm khỏi giỏ hàng.")),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Không thể xóa sản phẩm.")),
@@ -79,8 +82,6 @@ class _CartScreenState extends State<CartScreen> {
       );
     } catch (e) {
       print("Error creating order: $e");
-
-      // Hiển thị lỗi chi tiết
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Lỗi: Không thể tạo hóa đơn. Vui lòng kiểm tra lại giỏ hàng.")),
       );
@@ -95,55 +96,86 @@ class _CartScreenState extends State<CartScreen> {
           "Giỏ hàng của tôi",
           style: TextStyle(color: Colors.white),
         ),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : cartItems.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_cart_outlined,
-              size: 100,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 20),
-            Text(
-              "Giỏ hàng trống",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      )
-          : Column(
+          ? _buildEmptyCart()
+          : _buildCartContent(),
+    );
+  }
+
+  Widget _buildEmptyCart() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return _buildCartItem(item, index);
-              },
+          Icon(
+            Icons.shopping_cart_outlined,
+            size: 120,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Giỏ hàng trống",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _createOrder,
-              child: Text("Xuất hóa đơn"),
+          SizedBox(height: 10),
+          Text(
+            "Hãy thêm một vài sản phẩm vào giỏ hàng của bạn!",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
+  Widget _buildCartContent() {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            itemCount: cartItems.length,
+            itemBuilder: (context, index) {
+              final item = cartItems[index];
+              return _buildCartItem(item, index);
+            },
+          ),
+        ),
+        _buildTotalSection(),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton.icon(
+            onPressed: _createOrder,
+            icon: Icon(Icons.receipt_long),
+            label: Text("Xuất hóa đơn"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 15),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCartItem(dynamic item, int index) {
+    final price = item['price'] ?? 0.0; // Giá trị mặc định là 0.0 nếu null
+    final quantity = item['quantity'] ?? 0; // Giá trị mặc định là 0 nếu null
+
     return Dismissible(
       key: ValueKey(item['cartId']),
       direction: DismissDirection.endToStart,
@@ -162,16 +194,17 @@ class _CartScreenState extends State<CartScreen> {
       ),
       child: Card(
         margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(10.0),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hình ảnh sản phẩm
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
-                  item['imageUrl'] ?? 'https://via.placeholder.com/150',
+                  item['image'] ?? 'https://via.placeholder.com/150',
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
@@ -186,7 +219,6 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               SizedBox(width: 10),
-              // Thông tin sản phẩm
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,31 +235,26 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      'Giá: \$${item['price'] ?? "0"}',
+                      'Giá: \$${price.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.red,
+                        color: Colors.green,
                       ),
                     ),
                     SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Text(
-                          "Số lượng:",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          "${item['quantity']}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      "Số lượng: $quantity",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                onPressed: () => _removeItem(item['cartId'], index),
+                icon: Icon(Icons.delete, color: Colors.red),
               ),
             ],
           ),
@@ -235,4 +262,42 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+
+
+  Widget _buildTotalSection() {
+    final totalPrice = cartItems.fold<double>(
+      0.0,
+          (sum, item) {
+        final price = item['price'] ?? 0.0; // Giá trị mặc định là 0.0 nếu null
+        final quantity = item['quantity'] ?? 0; // Giá trị mặc định là 0 nếu null
+        return sum + (price * quantity);
+      },
+    );
+
+    return Container(
+      color: Colors.grey[200],
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Tổng cộng:",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            "\$${totalPrice.toStringAsFixed(2)}",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
