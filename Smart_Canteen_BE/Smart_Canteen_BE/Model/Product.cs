@@ -7,23 +7,23 @@ namespace Smart_Canteen_BE.Model
     {
         public int ProductId { get; set; }
 
-        [Required(ErrorMessage = "Tên sản phẩm là bắt buộc")]
+        [Required(ErrorMessage = "Product name is required")]
         public string ProductName { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero")]
         public decimal Price { get; set; }
 
         public string Description { get; set; }
 
-        [Required(ErrorMessage = "ID sản phẩm là bắt buộc")] // Đảm bảo CategoryId được cung cấp
+        [Required(ErrorMessage = "CategoryId is required")] // Đảm bảo CategoryId được cung cấp
         public int CategoryId { get; set; }
 
         public Category Category { get; set; } // Navigation property
 
-        [Required(ErrorMessage = "Hình ảnh là bắt buộc")]
+        [Required(ErrorMessage = "Image is required")]
         public string Image { get; set; }
 
-        [Range(0, int.MaxValue, ErrorMessage = "Cổ phiếu phải là một số không âm")]
+        [Range(0, int.MaxValue, ErrorMessage = "Stock must be a non-negative number")]
         public int Stock { get; set; }
 
         [JsonIgnore]

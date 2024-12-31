@@ -6,7 +6,7 @@ using Smart_Canteen_BE.Repository;
 
 namespace Smart_Canteen_BE.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     public class CategoryController : ControllerBase
@@ -17,7 +17,7 @@ namespace Smart_Canteen_BE.Controllers
         {
             _categoryRepository = categoryRepository;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -61,6 +61,10 @@ namespace Smart_Canteen_BE.Controllers
 
             return Ok(categoryOutput);
         }
+
+
+
+
         [Authorize(Policy = "AdminOnly")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CategoryInputDto categoryInput)
@@ -95,6 +99,7 @@ namespace Smart_Canteen_BE.Controllers
             return CreatedAtAction(nameof(GetById), new { id = category.CategoryId }, categoryOutput);
         }
 
+
         [Authorize(Policy = "AdminOnly")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] CategoryInputDto categoryInput)
@@ -109,6 +114,10 @@ namespace Smart_Canteen_BE.Controllers
             await _categoryRepository.UpdateCategoryAsync(category);
             return NoContent();
         }
+
+
+
+
         [Authorize(Policy = "AdminOnly")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -116,6 +125,7 @@ namespace Smart_Canteen_BE.Controllers
             await _categoryRepository.DeleteCategoryAsync(id);
             return NoContent();
         }
+
     }
 
 }

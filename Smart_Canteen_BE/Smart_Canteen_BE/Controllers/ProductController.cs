@@ -48,6 +48,20 @@ namespace Smart_Canteen_BE.Controllers
 
             return Ok(productOutput);
         }
+        [HttpGet("product/{productId}")]
+        public async Task<IActionResult> GetProductById(int productId)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null)
+                return NotFound(new { Message = $"Product with ID {productId} does not exist." });
+
+            return Ok(new
+            {
+                ProductId = product.ProductId,
+                ProductName = product.ProductName
+            });
+        }
 
         [Authorize(Policy = "AdminOnly")]
         [HttpPost]
@@ -142,5 +156,6 @@ namespace Smart_Canteen_BE.Controllers
             return Ok(products);
         }
     }
+
 
 }

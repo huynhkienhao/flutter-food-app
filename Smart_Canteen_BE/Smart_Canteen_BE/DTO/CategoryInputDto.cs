@@ -4,8 +4,8 @@ namespace Smart_Canteen_BE.DTO
 {
     public class CategoryInputDto
     {
-        [Required(ErrorMessage = "Tên danh mục là bắt buộc")]
-        [MaxLength(100, ErrorMessage = "Tên danh mục không được vượt quá 100 ký tự")]
+        [Required(ErrorMessage = "Category name is required")]
+        [MaxLength(100, ErrorMessage = "Category name cannot exceed 100 characters")]
         public string CategoryName { get; set; }
 
         public string Description { get; set; }

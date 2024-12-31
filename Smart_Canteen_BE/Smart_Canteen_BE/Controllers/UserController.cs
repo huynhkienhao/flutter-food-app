@@ -12,10 +12,12 @@ namespace Smart_Canteen_BE.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserController(UserManager<User> userManager)
+        public UserController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
 
@@ -91,5 +93,30 @@ namespace Smart_Canteen_BE.Controllers
 
             return Ok(new { Message = "User deleted successfully" });
         }
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet("role/{roleName}")]
+        public async Task<IActionResult> GetUsersByRole(string roleName)
+        {
+            // Kiểm tra nếu vai trò tồn tại
+            var roleExists = await _roleManager.RoleExistsAsync(roleName);
+            if (!roleExists)
+            {
+                return NotFound(new { Message = $"Role '{roleName}' does not exist." });
+            }
+
+            // Lấy danh sách người dùng có vai trò tương ứng
+            var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+
+            var userOutputs = usersInRole.Select(user => new
+            {
+                user.Id,
+                user.UserName,
+                user.Email,
+                user.FullName
+            });
+
+            return Ok(userOutputs);
+        }
+
     }
 }

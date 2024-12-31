@@ -158,7 +158,5 @@ namespace Smart_Canteen_BE.Controllers
             // Trả SVG về client
             return Content(svgQrCode, "image/svg+xml");
         }
-
-
     }
 }

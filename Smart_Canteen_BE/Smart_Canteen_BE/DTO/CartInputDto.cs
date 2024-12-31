@@ -4,14 +4,14 @@ namespace Smart_Canteen_BE.DTO
 {
     public class CartInputDto
     {
-        [Required(ErrorMessage = "ID user là bắt buộc")]
+        [Required(ErrorMessage = "UserId is required")]
         public string UserId { get; set; }
 
-        [Required(ErrorMessage = "ID sản phẩm là bắt buộc")]
+        [Required(ErrorMessage = "ProductId is required")]
         public int ProductId { get; set; }
 
-        [Required(ErrorMessage = "Số lượng là bắt buộc")]
-        [Range(1, int.MaxValue, ErrorMessage = "Số lượng phải ít nhất là 1")]
+        [Required(ErrorMessage = "Quantity is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1")]
         public int Quantity { get; set; }
     }
 }

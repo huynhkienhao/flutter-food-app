@@ -30,12 +30,33 @@ namespace Smart_Canteen_BE.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var order = await _orderRepository.GetOrderByIdAsync(id);
-            if (order == null)
-                return NotFound();
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product) // Bao gồm thông tin sản phẩm
+                .FirstOrDefaultAsync(o => o.OrderId == id);
 
-            return Ok(order);
+            if (order == null)
+                return NotFound(new { Message = $"Order with ID {id} does not exist." });
+
+            var orderOutput = new OrderOutputDto
+            {
+                OrderId = order.OrderId,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                OrderTime = order.OrderTime,
+                OrderDetails = order.OrderDetails.Select(od => new OrderDetailOutputDto
+                {
+                    OrderDetailId = od.OrderDetailId,
+                    ProductId = od.ProductId,
+                    ProductName = od.Product?.ProductName ?? "Không xác định", // Lấy tên sản phẩm từ Product
+                    Quantity = od.Quantity,
+                    SubTotal = od.SubTotal
+                }).ToList()
+            };
+
+            return Ok(orderOutput);
         }
+
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetOrdersByUserId(string userId)
@@ -44,7 +65,7 @@ namespace Smart_Canteen_BE.Controllers
             return Ok(orders);
         }
 
-        [Authorize(Policy = "UserOnly")]
+
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] OrderInputDto orderInput)
@@ -112,7 +133,7 @@ namespace Smart_Canteen_BE.Controllers
                 {
                     OrderDetailId = od.OrderDetailId,
                     ProductId = od.ProductId,
-                    ProductName = carts.First(c => c.ProductId == od.ProductId).Product.ProductName,
+                    ProductName = od.Product?.ProductName ?? "Unknown Product",
                     Quantity = od.Quantity,
                     SubTotal = od.SubTotal
                 }).ToList()
@@ -135,6 +156,29 @@ namespace Smart_Canteen_BE.Controllers
             await _orderRepository.DeleteOrderAsync(id);
             return NoContent();
         }
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] string status)
+        {
+            if (string.IsNullOrEmpty(status))
+            {
+                return BadRequest(new { Message = "Status is required" });
+            }
+
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound(new { Message = $"Order with ID {id} not found." });
+            }
+
+            order.Status = status;
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Order status updated successfully." });
+        }
     }
 
 }
+

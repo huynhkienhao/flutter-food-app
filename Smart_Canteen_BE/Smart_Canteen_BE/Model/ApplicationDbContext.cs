@@ -5,7 +5,10 @@ using Smart_Canteen_BE.Model;
 
 public class ApplicationDbContext : IdentityDbContext<User>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
 
     // DbSet for other models
     public DbSet<Category> Categories { get; set; }
@@ -62,4 +65,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .OnDelete(DeleteBehavior.Cascade);
 
     }
+
+   
+
 }

@@ -4,10 +4,12 @@ namespace Smart_Canteen_BE.Model
 {
     public class LoginModel
     {
-        [Required(ErrorMessage = "Tên người dùng phải bắt buộc")]
+        [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Mật khẩu phải bắt buộc")]
+        [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; } = string.Empty;
     }
+
+
 }
