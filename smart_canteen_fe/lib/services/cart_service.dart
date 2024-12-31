@@ -117,4 +117,23 @@ class CartService {
       rethrow;
     }
   }
+
+  Future<int> getCartItemCount(String userId) async {
+    final url = Uri.parse('${Config.apiBaseUrl}/Cart/count?userId=$userId');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['count'] ?? 0; // Đảm bảo trả về số lượng sản phẩm
+      } else {
+        throw Exception("Failed to fetch cart item count");
+      }
+    } catch (e) {
+      print("Error in getCartItemCount: $e");
+      return 0; // Trả về 0 nếu có lỗi
+    }
+  }
+
 }

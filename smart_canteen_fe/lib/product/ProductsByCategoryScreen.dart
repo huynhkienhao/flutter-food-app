@@ -24,13 +24,16 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
 
   List<dynamic> products = [];
   bool isLoading = true;
+  int cartItemCount = 0; // Lưu số lượng sản phẩm trong giỏ hàng
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
+    _loadCartItemCount(); // Lấy số lượng sản phẩm trong giỏ khi khởi tạo
   }
 
+  /// Tải danh sách sản phẩm theo danh mục
   Future<void> _loadProducts() async {
     try {
       final data = await productService.getProductsByCategory(widget.categoryId);
@@ -47,6 +50,24 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     }
   }
 
+  /// Tải số lượng sản phẩm trong giỏ hàng
+  Future<void> _loadCartItemCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString("user_id");
+
+      if (userId != null) {
+        final count = await cartService.getCartItemCount(userId); // API lấy số lượng
+        setState(() {
+          cartItemCount = count ?? 0; // Đảm bảo không null
+        });
+      }
+    } catch (e) {
+      print("Error loading cart item count: $e");
+    }
+  }
+
+  /// Thêm sản phẩm vào giỏ hàng
   void _addToCart(dynamic productId) async {
     if (productId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,6 +108,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
           backgroundColor: Colors.green,
         ),
       );
+      _loadCartItemCount(); // Cập nhật số lượng sản phẩm trong giỏ
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,14 +132,38 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
         ),
         backgroundColor: Colors.green,
         actions: [
-          IconButton(
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartScreen()),
-              );
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.shopping_cart),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  );
+                },
+              ),
+              if (cartItemCount > 0) // Hiển thị số lượng nếu lớn hơn 0
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$cartItemCount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -148,7 +194,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
             final price = product['price'] != null
                 ? product['price'].toString()
                 : "0.0";
-            final imageUrl = product['imageUrl'] ??
+            final imageUrl = product['image'] ??
                 'https://via.placeholder.com/150';
 
             return Card(
@@ -209,7 +255,8 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 8.0),
                     child: ElevatedButton(
-                      onPressed: () => _addToCart(product['productId']),
+                      onPressed: () =>
+                          _addToCart(product['productId']),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(
