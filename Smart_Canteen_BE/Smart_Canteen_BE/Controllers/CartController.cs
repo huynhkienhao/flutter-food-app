@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Smart_Canteen_BE.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     public class CartController : ControllerBase
@@ -97,6 +97,29 @@ namespace Smart_Canteen_BE.Controllers
         {
             await _cartRepository.RemoveFromCartAsync(cartId);
             return NoContent();
+        }
+
+        [HttpGet("count")]
+        public async Task<IActionResult> GetCartItemCount([FromQuery] string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest(new { message = "User ID is required." });
+            }
+
+            try
+            {
+                // Đếm tổng số lượng sản phẩm trong giỏ hàng của người dùng
+                var count = await _context.Carts
+                                          .Where(c => c.UserId == userId)
+                                          .SumAsync(c => c.Quantity);
+
+                return Ok(new { count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred.", error = ex.Message });
+            }
         }
     }
 }
