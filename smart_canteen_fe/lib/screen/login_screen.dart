@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _launchInstagramUrl() async {
-    const instagramUrl = 'https://www.instagram.com/hutechuniversity?igsh=OHIwbmE5Y3lwamxq';
+    const instagramUrl = 'https://www.instagram.com';
     try {
       final Uri url = Uri.parse(instagramUrl);
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -218,9 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: 'Nhập mật khẩu',
                             suffixIcon: IconButton(
                               icon: Icon(
-                                isPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -263,8 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: const Text(
                             'Đăng nhập',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -283,72 +280,73 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = _launchGuideUrl,
+                                  recognizer: TapGestureRecognizer()..onTap = _launchGuideUrl,
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 120),
+                        // Đoạn code mạng xã hội và bản quyền
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.facebook, color: Colors.blue, size: 40),
+                                onPressed: _launchFacebookUrl,
+                              ),
+                              SizedBox(width: 10),
+                              IconButton(
+                                icon: Image.asset(
+                                  'assets/images/youtube_logo.webp',
+                                  width: 50,
+                                  height: 50,
+                                ),
+                                onPressed: _launchYouTubeUrl,
+                              ),
+                              SizedBox(width: 10),
+                              IconButton(
+                                icon: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      'assets/images/instagram_logo.png',
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: _launchInstagramUrl,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Center( // Đảm bảo dòng chữ nằm ở giữa
+                            child: Text(
+                              'e-HUTECH ©2025 · Phiên bản 3.4.9 - a402',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10), // Thêm khoảng cách dưới
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.facebook, color: Colors.blue, size: 40),
-                  onPressed: _launchFacebookUrl, // Sử dụng hàm _launchFacebookUrl
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Image.asset(
-                    'assets/images/youtube_logo.webp',
-                    width: 50, height: 50,
-                  ),
-                  onPressed: _launchYouTubeUrl, // Sử dụng hàm _launchYouTubeUrl
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Container(
-                    width: 50, // Kích thước của logo
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle, // Tạo hình tròn
-                      border: Border.all(
-                        color: Colors.white, // Màu viền (có thể thay đổi)
-                        width: 2, // Độ dày của viền
-                      ),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/instagram_logo.png',
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover, // Đảm bảo logo không bị biến dạng
-                      ),
-                    ),
-                  ),
-                  onPressed: _launchInstagramUrl, // Sử dụng hàm _launchInstagramUrl
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20), // Thêm margin dưới cho dòng chữ
-            child: Text(
-              'e-HUTECH ©2025 · Phiên bản 3.4.9 - a402',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          )
         ],
       ),
     );
