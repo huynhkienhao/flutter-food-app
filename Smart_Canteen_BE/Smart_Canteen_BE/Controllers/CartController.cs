@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Smart_Canteen_BE.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class CartController : ControllerBase
@@ -35,6 +34,7 @@ namespace Smart_Canteen_BE.Controllers
                 ProductName = cart.Product?.ProductName,
                 ProductPrice = cart.Product?.Price ?? 0,
                 Quantity = cart.Quantity,
+                Stock = cart.Product?.Stock ?? 0, // Thêm stock
                 AddedTime = cart.AddedTime
             });
 
@@ -97,6 +97,34 @@ namespace Smart_Canteen_BE.Controllers
         {
             await _cartRepository.RemoveFromCartAsync(cartId);
             return NoContent();
+        }
+
+        [HttpPut("{cartId}")]
+        public async Task<IActionResult> UpdateCartQuantity(int cartId, [FromBody] int newQuantity)
+        {
+            if (newQuantity <= 0)
+            {
+                return BadRequest(new { Message = "Quantity must be greater than 0." });
+            }
+
+            var cartItem = await _context.Carts.FindAsync(cartId);
+            if (cartItem == null)
+            {
+                return NotFound(new { Message = $"Cart item with ID {cartId} does not exist." });
+            }
+
+            cartItem.Quantity = newQuantity;
+            _context.Carts.Update(cartItem);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                cartItem.CartId,
+                cartItem.ProductId,
+                cartItem.Quantity,
+                ProductPrice = cartItem.Product?.Price,
+                TotalPrice = cartItem.Product?.Price * cartItem.Quantity
+            });
         }
 
         [HttpGet("count")]

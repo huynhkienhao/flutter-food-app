@@ -131,6 +131,7 @@ namespace Smart_Canteen_BE.Controllers
             return NoContent();
         }
 
+
         [HttpGet("category/{categoryId}")]
         public async Task<IActionResult> GetProductsByCategory(int categoryId)
         {
@@ -143,7 +144,7 @@ namespace Smart_Canteen_BE.Controllers
                                               Price = p.Price,
                                               Description = p.Description,
                                               Image = p.Image,
-                                              Stock = p.Stock,
+                                              Stock = p.Stock, // stock đã được trả về
                                               CategoryId = p.CategoryId,
                                               CategoryName = p.Category.CategoryName
                                           }).ToListAsync();
@@ -156,6 +157,4 @@ namespace Smart_Canteen_BE.Controllers
             return Ok(products);
         }
     }
-
-
 }

@@ -64,8 +64,5 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasForeignKey<QRCode>(qr => qr.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
 
-    }
-
-   
-
+    } 
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Smart_Canteen_BE.Hubs; // Namespace cho NotificationHub
 using Smart_Canteen_BE.Model;
 using Smart_Canteen_BE.Repository;
 using System.Text;
@@ -25,6 +26,9 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IQRCodeRepository, QRCodeRepository>();
 
+// Add SignalR
+builder.Services.AddSignalR(); // Thêm SignalR vào container dịch vụ
+
 // Configure Controllers
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -43,7 +47,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
         .AllowAnyHeader()
-        .AllowAnyMethod();
+        .AllowAnyMethod()
+        .AllowCredentials(); // SignalR cần cho phép credentials
     });
 });
 
@@ -108,6 +113,10 @@ app.UseCors("MyAllowOrigins"); // Apply CORS Policy
 app.UseHttpsRedirection();
 app.UseAuthentication(); // Authentication Middleware
 app.UseAuthorization(); // Authorization Middleware
+
+// Map SignalR Hubs
+app.MapHub<NotificationHub>("/notificationHub"); // Định tuyến cho NotificationHub
+
 app.MapControllers();
 
 app.Run();
