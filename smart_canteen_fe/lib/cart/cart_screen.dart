@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import '../../../services/cart_service.dart';
 import '../Order/order_screen.dart';
 
@@ -10,8 +11,11 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   final CartService cartService = CartService();
+  final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
   List<dynamic> cartItems = [];
   bool isLoading = true;
+  double totalPrice = 0.0;
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _CartScreenState extends State<CartScreen> {
       setState(() {
         cartItems = data ?? [];
         isLoading = false;
+        _calculateTotalPrice(); // Tính toán lại tổng giá trị giỏ hàng
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,11 +50,23 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  // Cập nhật lại giá trị tổng tiền giỏ hàng
+  void _calculateTotalPrice() {
+    totalPrice = 0.0;
+    for (var item in cartItems) {
+      final price = item['productPrice'] ?? 0.0; // Đảm bảo giá không null
+      final quantity = item['quantity'] ?? 0;    // Đảm bảo số lượng không null
+      totalPrice += price * quantity;
+    }
+    setState(() {}); // Cập nhật UI sau khi tính tổng
+  }
+
   void _removeItem(int cartId, int index) async {
     try {
       await cartService.removeFromCart(cartId);
       setState(() {
         cartItems.removeAt(index);
+        _calculateTotalPrice(); // Cập nhật lại tổng giá trị sau khi xóa sản phẩm
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Đã xóa sản phẩm khỏi giỏ hàng.")),
@@ -73,6 +90,7 @@ class _CartScreenState extends State<CartScreen> {
       await cartService.updateCartQuantity(cartId, newQuantity);
       setState(() {
         cartItems[index]['quantity'] = newQuantity;
+        _calculateTotalPrice(); // Cập nhật lại tổng giá trị sau khi thay đổi số lượng
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Cập nhật số lượng thành công.")),
@@ -195,8 +213,8 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCartItem(dynamic item, int index) {
-    final price = item['price'] ?? 0.0; // Giá trị mặc định là 0.0 nếu null
-    final quantity = item['quantity'] ?? 0; // Giá trị mặc định là 0 nếu null
+    final price = item['productPrice'] ?? 0.0;
+    final quantity = item['quantity'] ?? 0;
     final stock = item['stock'] ?? 0;
 
     return Dismissible(
@@ -224,23 +242,6 @@ class _CartScreenState extends State<CartScreen> {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  item['image'] ?? 'https://via.placeholder.com/150',
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      color: Colors.grey[300],
-                      child: Icon(Icons.broken_image, color: Colors.grey),
-                    );
-                  },
-                ),
-              ),
               SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -258,7 +259,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      'Giá: \$${price.toStringAsFixed(2)}',
+                      'Giá: ${currencyFormat.format(price)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.green,
@@ -297,15 +298,6 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildTotalSection() {
-    final totalPrice = cartItems.fold<double>(
-      0.0,
-          (sum, item) {
-        final price = item['price'] ?? 0.0;
-        final quantity = item['quantity'] ?? 0;
-        return sum + (price * quantity);
-      },
-    );
-
     return Container(
       color: Colors.grey[200],
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -313,14 +305,14 @@ class _CartScreenState extends State<CartScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Tổng cộng:",
+            "Tổng cộng: ",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            "\$${totalPrice.toStringAsFixed(2)}",
+            "${currencyFormat.format(totalPrice)}",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

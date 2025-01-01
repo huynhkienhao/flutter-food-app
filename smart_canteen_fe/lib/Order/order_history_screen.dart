@@ -3,6 +3,7 @@ import 'package:signalr_netcore/http_connection_options.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
 import 'package:signalr_netcore/itransport.dart';
+import 'package:intl/intl.dart'; // Thêm import intl
 import 'package:smart_canteen_fe/services/order_service.dart';
 import '../../config_url/config.dart';
 import 'order_screen.dart';
@@ -78,6 +79,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     } catch (error) {
       print("SignalR connection error: $error");
     }
+  }
+
+  String formatCurrency(double amount) {
+    final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    return currencyFormat.format(amount);
   }
 
   void _showCustomNotification(BuildContext context, String message) {
@@ -172,7 +178,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           final order = orderHistory[index];
           return ListTile(
             title: Text("Order ID: ${order['orderId']}"),
-            subtitle: Text("Total: ${order['totalPrice']}"),
+            subtitle: Text(
+              "Total: ${formatCurrency(order['totalPrice'] ?? 0)}",
+            ),
             trailing: Text(order['status']),
             onTap: () => _navigateToOrderScreen(
               context,

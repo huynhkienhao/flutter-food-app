@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:smart_canteen_fe/user/UserScreen.dart';
 
 class OrderScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
 
   const OrderScreen({required this.orderData, Key? key}) : super(key: key);
+
+  NumberFormat getCurrencyFormat() {
+    return NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,7 @@ class OrderScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "Tổng tiền: ${orderData['totalPrice'] ?? 0}",
+                  "Tổng tiền: ${getCurrencyFormat().format(orderData['totalPrice'] ?? 0)}",
                   style: TextStyle(fontSize: 16),
                 ),
                 Text(
@@ -70,7 +75,7 @@ class OrderScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         subtitle: Text("Số lượng: ${detail['quantity'] ?? 0}"),
-                        trailing: Text("Tạm tính: ${detail['subTotal'] ?? 0}"),
+                        trailing: Text("Tạm tính: ${getCurrencyFormat().format(detail['subTotal'] ?? 0)}"),
                       );
                     },
                   ),
@@ -103,12 +108,12 @@ class OrderScreen extends StatelessWidget {
   String _generateQRCodeData(Map<String, dynamic> orderData) {
     final buffer = StringBuffer();
     buffer.writeln("Mã hóa đơn: ${orderData['orderId']}");
-    buffer.writeln("Tổng tiền: ${orderData['totalPrice']}");
+    buffer.writeln("Tổng tiền: ${getCurrencyFormat().format(orderData['totalPrice'] ?? 0)}");
     buffer.writeln("Trạng thái: ${orderData['status']}");
     buffer.writeln("Thời gian đặt hàng: ${orderData['orderTime']}");
     buffer.writeln("Chi tiết đơn hàng:");
     for (var detail in orderData['orderDetails'] ?? []) {
-      buffer.writeln("- ${detail['productName']} x${detail['quantity']}: ${detail['subTotal']}");
+      buffer.writeln("- ${detail['productName']} x${detail['quantity']}: ${getCurrencyFormat().format(detail['subTotal'] ?? 0)}");
     }
     return buffer.toString();
   }

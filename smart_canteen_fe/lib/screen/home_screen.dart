@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/product_service.dart';
+import '../../services/cart_service.dart';
+import '../product/product_detail_screen.dart';
+import 'package:intl/intl.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,6 +12,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ProductService productService = ProductService();
+  final CartService cartService = CartService();
+  final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
+
   List<dynamic> products = [];
   List<dynamic> filteredProducts = [];
   bool isLoading = true;
@@ -51,6 +58,16 @@ class _HomeScreenState extends State<HomeScreen> {
             .toList();
       }
     });
+  }
+
+  // Điều hướng đến trang chi tiết sản phẩm
+  void _navigateToProductDetail(int productId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailScreen(productId: productId),
+      ),
+    );
   }
 
   @override
@@ -97,56 +114,60 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: filteredProducts.length,
             itemBuilder: (context, index) {
               final product = filteredProducts[index];
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Hiển thị hình ảnh sản phẩm
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(12)),
-                        child: Image.network(
-                          product['imageUrl'] ??
-                              'https://via.placeholder.com/150',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.broken_image, size: 50);
-                          },
+              return GestureDetector(
+                onTap: () {
+                  _navigateToProductDetail(product['productId']); // Chuyển đến trang chi tiết sản phẩm
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Hiển thị hình ảnh sản phẩm
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                          child: Image.network(
+                            product['image'] ?? 'https://via.placeholder.com/150',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons.broken_image, size: 50);
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                    // Hiển thị thông tin sản phẩm
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['productName'] ?? "Không có tên",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      // Hiển thị thông tin sản phẩm
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product['productName'] ?? "Không có tên",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Giá: ${product['price'] ?? 0} VND',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.green,
+                            SizedBox(height: 4),
+                            Text(
+                              'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.green,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

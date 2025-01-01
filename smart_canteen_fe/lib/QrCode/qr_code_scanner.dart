@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:smart_canteen_fe/Order/order_screen.dart';
+import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class QrCodeScanner extends StatefulWidget {
@@ -9,15 +10,19 @@ class QrCodeScanner extends StatefulWidget {
 }
 
 class _QrCodeScannerState extends State<QrCodeScanner> {
+  String formatCurrency(double amount) {
+    final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    return currencyFormat.format(amount);
+  }
+
   Future<void> scanQrCode(BuildContext context) async {
     try {
       final result = await BarcodeScanner.scan();
 
       if (result.type == ResultType.Barcode) {
-        final scannedData = result.rawContent.trim(); // Lấy toàn bộ nội dung mã QR
+        final scannedData = result.rawContent.trim();
         print('Scanned Data: $scannedData');
 
-        // Dữ liệu quét sẽ được điều hướng đến màn hình chi tiết
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -30,20 +35,15 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
     }
   }
 
-  // Hàm chuyển đổi nội dung quét được thành dữ liệu JSON
   Map<String, dynamic> _parseScannedData(String data) {
     try {
-      // Giả định mã QR chứa JSON, cần decode
       return json.decode(data);
     } catch (e) {
       print('Invalid QR Code format: $e');
-
-      // Trường hợp mã QR không phải JSON, xử lý như chuỗi văn bản
       return _parseTextBasedQRCode(data);
     }
   }
 
-  // Hàm phân tích chuỗi văn bản nếu mã QR không phải JSON
   Map<String, dynamic> _parseTextBasedQRCode(String data) {
     final Map<String, dynamic> parsedData = {
       "orderId": null,
@@ -59,7 +59,8 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
         if (line.startsWith("Mã hóa đơn:")) {
           parsedData["orderId"] = int.tryParse(line.split(':').last.trim());
         } else if (line.startsWith("Tổng tiền:")) {
-          parsedData["totalPrice"] = double.tryParse(line.split(':').last.trim());
+          final price = double.tryParse(line.split(':').last.trim()) ?? 0;
+          parsedData["totalPrice"] = formatCurrency(price);
         } else if (line.startsWith("Trạng thái:")) {
           parsedData["status"] = line.split(':').last.trim();
         } else if (line.startsWith("Thời gian đặt hàng:")) {
@@ -67,10 +68,11 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
         } else if (line.startsWith("-")) {
           final parts = line.substring(1).split('x');
           if (parts.length == 2) {
+            final subTotal = double.tryParse(parts[1].split(':').last.trim()) ?? 0;
             parsedData["orderDetails"].add({
               "productName": parts[0].trim(),
               "quantity": int.tryParse(parts[1].split(':').first.trim()),
-              "subTotal": double.tryParse(parts[1].split(':').last.trim()),
+              "subTotal": formatCurrency(subTotal),
             });
           }
         }

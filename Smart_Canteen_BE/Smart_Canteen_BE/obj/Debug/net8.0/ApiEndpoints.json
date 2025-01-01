@@ -65,6 +65,27 @@
   },
   {
     "ContainingType": "Smart_Canteen_BE.Controllers.CartController",
+    "Method": "UpdateCartQuantity",
+    "RelativePath": "api/Cart/{cartId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "cartId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "newQuantity",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Smart_Canteen_BE.Controllers.CartController",
     "Method": "GetCartItemCount",
     "RelativePath": "api/Cart/count",
     "HttpMethod": "GET",

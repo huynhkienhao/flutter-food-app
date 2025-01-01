@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart'; // Thêm import
 import '../../services/product_service.dart';
 import '../../services/category_service.dart';
 
@@ -15,6 +16,10 @@ class _ProductScreenState extends State<ProductScreen> {
   List<dynamic> products = [];
   List<dynamic> categories = [];
   String? userRole;
+
+  NumberFormat getCurrencyFormat() {
+    return NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  }
 
   @override
   void initState() {
@@ -277,7 +282,7 @@ class _ProductScreenState extends State<ProductScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Giá: \$${product['price']}',
+                          'Giá: ${getCurrencyFormat().format(product['price'] ?? 0)}',
                           style: TextStyle(color: Colors.green, fontSize: 14),
                         ),
                       ],

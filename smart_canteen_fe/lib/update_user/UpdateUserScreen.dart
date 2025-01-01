@@ -131,17 +131,21 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    _buildFormField(
-                      initialValue: fullName,
-                      label: "Họ và tên",
-                      icon: Icons.person,
-                      onSaved: (value) => fullName = value,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Vui lòng nhập họ và tên";
-                        }
-                        return null;
-                      },
+                    // Ẩn trường "Họ và tên"
+                    Visibility(
+                      visible: false, // Ẩn trường "Họ và tên"
+                      child: _buildFormField(
+                        initialValue: fullName,
+                        label: "Họ và tên",
+                        icon: Icons.person,
+                        onSaved: (value) => fullName = value,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Vui lòng nhập họ và tên";
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                     SizedBox(height: 12),
                     _buildFormField(

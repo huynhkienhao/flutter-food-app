@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:smart_canteen_fe/services/order_service.dart';
 import 'order_screen.dart';
 
 class OrderHistoryAdminScreen extends StatefulWidget {
   @override
-  _OrderHistoryAdminScreenState createState() => _OrderHistoryAdminScreenState();
+  _OrderHistoryAdminScreenState createState() =>
+      _OrderHistoryAdminScreenState();
 }
 
 class _OrderHistoryAdminScreenState extends State<OrderHistoryAdminScreen> {
   final OrderService orderService = OrderService();
   List<dynamic> orderHistories = [];
   bool isLoading = true;
+
+  NumberFormat getCurrencyFormat() {
+    return NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  }
 
   @override
   void initState() {
@@ -80,7 +86,8 @@ class _OrderHistoryAdminScreenState extends State<OrderHistoryAdminScreen> {
           return ListTile(
             title: Text("Order ID: ${order['orderId']}"),
             subtitle: Text(
-                "User ID: ${order['userId']} | Total: ${order['totalPrice']}"),
+              "User ID: ${order['userId']} | Total: ${getCurrencyFormat().format(order['totalPrice'] ?? 0)}",
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

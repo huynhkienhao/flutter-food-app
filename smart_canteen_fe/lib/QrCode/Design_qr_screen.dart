@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DetailScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
 
   DetailScreen({required this.orderData});
+
+  String formatCurrency(double amount) {
+    final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    return currencyFormat.format(amount);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +38,7 @@ class DetailScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "Tổng tiền: ${orderData['totalPrice']}",
+                  "Tổng tiền: ${formatCurrency(orderData['totalPrice'] ?? 0)}",
                   style: TextStyle(fontSize: 16),
                 ),
                 SizedBox(height: 8),
@@ -77,7 +83,7 @@ class DetailScreen extends StatelessWidget {
                               ],
                             ),
                             Text(
-                              "Tạm tính: ${item['subTotal']}",
+                              "Tạm tính: ${formatCurrency(item['subTotal'] ?? 0)}",
                               style: TextStyle(fontSize: 14),
                             ),
                           ],

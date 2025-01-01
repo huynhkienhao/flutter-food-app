@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/cart_service.dart';
 import '../../services/product_service.dart';
 import '../Cart/cart_screen.dart';
+import 'package:intl/intl.dart';
 
 class ProductsByCategoryScreen extends StatefulWidget {
   final int categoryId;
@@ -21,6 +22,8 @@ class ProductsByCategoryScreen extends StatefulWidget {
 class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
   final ProductService productService = ProductService();
   final CartService cartService = CartService();
+  final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
 
   List<dynamic> products = [];
   bool isLoading = true;
@@ -255,10 +258,10 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Giá: \$${price}',
+                          'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.teal,
+                            color: Colors.green,
                           ),
                         ),
                       ],
