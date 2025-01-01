@@ -4,13 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config_url/config.dart';
 
 class ProductService {
-  final String baseUrl = "${Config.apiBaseUrl}/Product";
+  final String baseUrl = "${Config.apiBaseUrl}/api/Product";
+
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("jwt_token");
+  }
 
   Future<List<dynamic>> getProducts() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-
+      final token = await _getToken();
       if (token == null) {
         throw Exception("No authentication token found. Please log in again.");
       }
@@ -22,11 +25,6 @@ class ProductService {
           'Authorization': 'Bearer $token',
         },
       );
-
-      print("Request URL: $baseUrl");
-      print("Authorization Token: Bearer $token");
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -41,9 +39,7 @@ class ProductService {
 
   Future<void> addProduct(Map<String, dynamic> productData) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-
+      final token = await _getToken();
       if (token == null) {
         throw Exception("No authentication token found. Please log in again.");
       }
@@ -57,11 +53,6 @@ class ProductService {
         body: json.encode(productData),
       );
 
-      print("Request URL: $baseUrl");
-      print("Request Body: ${json.encode(productData)}");
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       if (response.statusCode != 201) {
         throw Exception("Failed to add product: ${response.statusCode}");
       }
@@ -73,9 +64,7 @@ class ProductService {
 
   Future<void> updateProduct(int productId, Map<String, dynamic> productData) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-
+      final token = await _getToken();
       if (token == null) {
         throw Exception("No authentication token found. Please log in again.");
       }
@@ -93,11 +82,6 @@ class ProductService {
         body: json.encode(productData),
       );
 
-      print("Request URL: $baseUrl/$productId");
-      print("Request Body: ${json.encode(productData)}");
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       if (response.statusCode != 204) {
         throw Exception("Failed to update product: ${response.statusCode}");
       }
@@ -109,9 +93,7 @@ class ProductService {
 
   Future<void> deleteProduct(int productId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-
+      final token = await _getToken();
       if (token == null) {
         throw Exception("No authentication token found. Please log in again.");
       }
@@ -123,10 +105,6 @@ class ProductService {
         },
       );
 
-      print("Request URL: $baseUrl/$productId");
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       if (response.statusCode != 204) {
         throw Exception("Failed to delete product: ${response.statusCode}");
       }
@@ -136,12 +114,9 @@ class ProductService {
     }
   }
 
-  // Hàm getProductsByCategory nằm ở đây, không nằm trong bất kỳ hàm nào khác
   Future<List<dynamic>> getProductsByCategory(int categoryId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("jwt_token");
-
+      final token = await _getToken();
       if (token == null) {
         throw Exception("No authentication token found. Please log in again.");
       }
@@ -153,10 +128,6 @@ class ProductService {
           'Authorization': 'Bearer $token',
         },
       );
-
-      print("Request URL: $baseUrl/category/$categoryId");
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -170,19 +141,30 @@ class ProductService {
       rethrow;
     }
   }
-  Future<String> getProductName(int productId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("jwt_token");
-    final response = await http.get(
-      Uri.parse("${Config.apiBaseUrl}/Product/$productId"),
-      headers: {'Authorization': 'Bearer $token'},
-    );
 
-    if (response.statusCode == 200) {
-      final productData = json.decode(response.body);
-      return productData['productName'];
-    } else {
-      throw Exception("Failed to fetch product name.");
+  Future<String> getProductName(int productId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception("No authentication token found. Please log in again.");
+      }
+
+      final response = await http.get(
+        Uri.parse("$baseUrl/$productId"),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final productData = json.decode(response.body);
+        return productData['productName'];
+      } else {
+        throw Exception("Failed to fetch product name.");
+      }
+    } catch (e) {
+      print("Error in getProductName: $e");
+      rethrow;
     }
   }
 }

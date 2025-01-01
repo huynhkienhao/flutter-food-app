@@ -40,8 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           usernameController.text.trim(),
           emailController.text.trim(),
           passwordController.text.trim(),
-          fullNameController.text.trim(),
-          roleController.text.trim(),
+          fullName: fullNameController.text.trim().isNotEmpty ? fullNameController.text.trim() : null,
+          role: roleController.text.trim().isNotEmpty ? roleController.text.trim() : null,
         );
 
         if (response['status']) {
@@ -65,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

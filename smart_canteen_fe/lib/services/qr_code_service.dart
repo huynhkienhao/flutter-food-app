@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config_url/config.dart';
 
 class QRCodeService {
-  final String baseUrl = "${Config.apiBaseUrl}/QRCode";
+  final String baseUrl = "${Config.apiBaseUrl}/api/QRCode";
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -12,45 +12,55 @@ class QRCodeService {
   }
 
   Future<Map<String, dynamic>> getQRCodeByOrderId(String orderId) async {
-    final token = await _getToken();
-    if (token == null) {
-      throw Exception("Authentication token not found. Please log in again.");
-    }
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception("Authentication token not found. Please log in again.");
+      }
 
-    final response = await http.get(
-      Uri.parse("$baseUrl/$orderId"),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final response = await http.get(
+        Uri.parse("$baseUrl/$orderId"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to fetch QR Code for Order ID: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Failed to fetch QR Code for Order ID: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error in getQRCodeByOrderId: $e");
+      rethrow;
     }
   }
+
   Future<Map<String, dynamic>> generateQRCode(int orderId) async {
-    final token = await _getToken();
-    if (token == null) {
-      throw Exception("Authentication token not found. Please log in again.");
-    }
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception("Authentication token not found. Please log in again.");
+      }
 
-    final response = await http.post(
-      Uri.parse("$baseUrl/generate"),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'orderId': orderId}),
-    );
+      final response = await http.post(
+        Uri.parse("$baseUrl/generate"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'orderId': orderId}),
+      );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to generate QR Code: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Failed to generate QR Code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error in generateQRCode: $e");
+      rethrow;
     }
   }
-
 }

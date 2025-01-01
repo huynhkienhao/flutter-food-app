@@ -61,6 +61,29 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  void _updateItemQuantity(int cartId, int newQuantity, int stock, int index) async {
+    if (newQuantity > stock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Số lượng vượt quá kho.")),
+      );
+      return;
+    }
+
+    try {
+      await cartService.updateCartQuantity(cartId, newQuantity);
+      setState(() {
+        cartItems[index]['quantity'] = newQuantity;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Cập nhật số lượng thành công.")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Không thể cập nhật số lượng.")),
+      );
+    }
+  }
+
   void _createOrder() async {
     try {
       final cartIds = cartItems.map((item) => item['cartId'] as int).toList();
@@ -81,7 +104,6 @@ class _CartScreenState extends State<CartScreen> {
         ),
       );
     } catch (e) {
-      print("Error creating order: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Lỗi: Không thể tạo hóa đơn. Vui lòng kiểm tra lại giỏ hàng.")),
       );
@@ -175,6 +197,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildCartItem(dynamic item, int index) {
     final price = item['price'] ?? 0.0; // Giá trị mặc định là 0.0 nếu null
     final quantity = item['quantity'] ?? 0; // Giá trị mặc định là 0 nếu null
+    final stock = item['stock'] ?? 0;
 
     return Dismissible(
       key: ValueKey(item['cartId']),
@@ -253,8 +276,18 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               IconButton(
-                onPressed: () => _removeItem(item['cartId'], index),
-                icon: Icon(Icons.delete, color: Colors.red),
+                icon: Icon(Icons.remove, color: Colors.blue),
+                onPressed: () {
+                  if (quantity > 1) {
+                    _updateItemQuantity(item['cartId'], quantity - 1, stock, index);
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.add, color: Colors.blue),
+                onPressed: () {
+                  _updateItemQuantity(item['cartId'], quantity + 1, stock, index);
+                },
               ),
             ],
           ),
@@ -263,13 +296,12 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-
   Widget _buildTotalSection() {
     final totalPrice = cartItems.fold<double>(
       0.0,
           (sum, item) {
-        final price = item['price'] ?? 0.0; // Giá trị mặc định là 0.0 nếu null
-        final quantity = item['quantity'] ?? 0; // Giá trị mặc định là 0 nếu null
+        final price = item['price'] ?? 0.0;
+        final quantity = item['quantity'] ?? 0;
         return sum + (price * quantity);
       },
     );
@@ -299,5 +331,4 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
-
 }

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_canteen_fe/screen/register_screen.dart';
 import '../services/auth_service.dart';
 import '../Admin/AdminScreen.dart';
 import '../User/UserScreen.dart';
-
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -100,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -218,35 +215,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    RichText(
-                      text: TextSpan(
-                        text: "Chưa có tài khoản? ", // Phần văn bản thông thường
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16, // Tăng kích thước font
-                        ),
-                        children: [
-                          TextSpan(
-                            text: "Đăng ký ngay", // Phần văn bản có thể nhấn
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16, // Tăng kích thước font
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                // Điều hướng tới trang đăng ký
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => RegisterScreen(),
-                                  ),
-                                );
-                              },
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center, // Căn giữa dòng chữ
-                    ),
                   ],
                 ),
               ),

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config_url/config.dart';
 
 class CartService {
-  final String baseUrl = "${Config.apiBaseUrl}/Cart";
+  final String baseUrl = "${Config.apiBaseUrl}/api/Cart";
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,13 +25,23 @@ class CartService {
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      return data.map((item) {
+        return {
+          'cartId': item['cartId'],
+          'productId': item['productId'],
+          'productName': item['productName'],
+          'productPrice': item['productPrice'],
+          'quantity': item['quantity'],
+          'stock': item['stock'], // Thông tin số lượng trong kho
+        };
+      }).toList();
     } else {
       throw Exception("Failed to fetch cart items.");
     }
   }
 
-  Future<void> addToCart(String userId, int productId, int quantity) async {
+  Future<Map<String, dynamic>> addToCart(String userId, int productId, int quantity) async {
     final token = await _getToken();
     if (token == null) {
       throw Exception("Authentication token not found.");
@@ -50,7 +60,17 @@ class CartService {
       }),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode == 201) {
+      final responseData = json.decode(response.body);
+      return {
+        'cartId': responseData['cartId'], // ID của giỏ hàng
+        'productId': responseData['productId'], // ID sản phẩm
+        'productName': responseData['productName'], // Tên sản phẩm
+        'productPrice': responseData['productPrice'], // Giá sản phẩm
+        'quantity': responseData['quantity'], // Số lượng sản phẩm
+        'totalPrice': responseData['productPrice'] * responseData['quantity'], // Tổng giá
+      };
+    } else {
       throw Exception("Failed to add to cart.");
     }
   }
@@ -75,21 +95,18 @@ class CartService {
 
   Future<Map<String, dynamic>> createOrder(List<int> cartIds) async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Lấy token từ SharedPreferences
     final token = prefs.getString("jwt_token");
     if (token == null) {
       throw Exception("Authentication token not found. Please log in again.");
     }
 
-    // Lấy userId từ SharedPreferences
     final userId = prefs.getString("user_id");
     if (userId == null) {
       throw Exception("User ID not found. Please log in again.");
     }
 
     try {
-      final url = "${Config.apiBaseUrl}/order";
+      final url = "${Config.apiBaseUrl}/api/order";
       print("Calling API: $url with UserID: $userId and Cart IDs: $cartIds");
 
       final response = await http.post(
@@ -118,22 +135,50 @@ class CartService {
     }
   }
 
+  Future<void> updateCartQuantity(int cartId, int newQuantity) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception("Authentication token not found.");
+    }
+
+    final response = await http.put(
+      Uri.parse("$baseUrl/$cartId"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(newQuantity),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update cart quantity.");
+    }
+  }
+
   Future<int> getCartItemCount(String userId) async {
-    final url = Uri.parse('${Config.apiBaseUrl}/Cart/count?userId=$userId');
+    final url = Uri.parse('${Config.apiBaseUrl}/api/Cart/count?userId=$userId');
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception("Authentication token not found.");
+    }
 
     try {
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['count'] ?? 0; // Đảm bảo trả về số lượng sản phẩm
+        return data['count'] ?? 0; // Trả về số lượng sản phẩm
       } else {
-        throw Exception("Failed to fetch cart item count");
+        throw Exception("Failed to fetch cart item count.");
       }
     } catch (e) {
       print("Error in getCartItemCount: $e");
       return 0; // Trả về 0 nếu có lỗi
     }
   }
-
 }

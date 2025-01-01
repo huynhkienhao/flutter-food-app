@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config_url/config.dart';
 
 class OrderService {
-  final String baseUrl = "${Config.apiBaseUrl}/Order";
+  final String baseUrl = "${Config.apiBaseUrl}/api/Order";
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -31,6 +31,7 @@ class OrderService {
       throw Exception("Failed to fetch order history: ${response.statusCode}");
     }
   }
+
   Future<Map<String, dynamic>> getOrderDetailsById(int orderId) async {
     final token = await _getToken();
     if (token == null) {
@@ -51,15 +52,15 @@ class OrderService {
       throw Exception("Failed to fetch order details: ${response.statusCode}");
     }
   }
+
   Future<List<dynamic>> getAllOrderHistories() async {
-    final token = await _getToken(); // Lấy token từ phương thức _getToken()
+    final token = await _getToken();
     if (token == null) {
       throw Exception("Authentication token not found.");
     }
 
-    // Gọi API với endpoint để lấy toàn bộ lịch sử đơn hàng
     final response = await http.get(
-      Uri.parse("https://longtanshop39.conveyor.cloud/api/order"),
+      Uri.parse(baseUrl), // URL endpoint hợp lệ
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -67,10 +68,8 @@ class OrderService {
     );
 
     if (response.statusCode == 200) {
-      // Parse response body thành danh sách JSON
       return json.decode(response.body);
     } else {
-      // Xử lý lỗi nếu xảy ra
       throw Exception("Failed to fetch all order histories: ${response.statusCode}");
     }
   }
@@ -87,12 +86,11 @@ class OrderService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode(status),
+      body: json.encode({'status': status}), // Truyền dữ liệu JSON đúng format
     );
 
     if (response.statusCode != 200) {
       throw Exception("Failed to update order status: ${response.statusCode}");
     }
   }
-
 }

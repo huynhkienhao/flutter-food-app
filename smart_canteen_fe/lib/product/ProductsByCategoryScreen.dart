@@ -24,7 +24,8 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
 
   List<dynamic> products = [];
   bool isLoading = true;
-  int cartItemCount = 0; // Lưu số lượng sản phẩm trong giỏ hàng
+  int cartItemCount = 0; // Số lượng sản phẩm trong giỏ hàng
+  Map<int, int> productQuantities = {}; // Lưu số lượng cho từng sản phẩm
 
   @override
   void initState() {
@@ -33,13 +34,17 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     _loadCartItemCount(); // Lấy số lượng sản phẩm trong giỏ khi khởi tạo
   }
 
-  /// Tải danh sách sản phẩm theo danh mục
   Future<void> _loadProducts() async {
     try {
       final data = await productService.getProductsByCategory(widget.categoryId);
       setState(() {
         products = data ?? [];
         isLoading = false;
+
+        // Khởi tạo số lượng mặc định là 1 cho mỗi sản phẩm
+        productQuantities = {
+          for (var product in data) product['productId']: 1,
+        };
       });
     } catch (e) {
       print("Error loading products: $e");
@@ -50,7 +55,6 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     }
   }
 
-  /// Tải số lượng sản phẩm trong giỏ hàng
   Future<void> _loadCartItemCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -67,21 +71,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     }
   }
 
-  /// Thêm sản phẩm vào giỏ hàng
-  void _addToCart(dynamic productId) async {
-    if (productId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "ID sản phẩm không hợp lệ.",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
+  void _addToCart(int productId) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("user_id");
     if (userId == null) {
@@ -98,11 +88,12 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
     }
 
     try {
-      await cartService.addToCart(userId, productId, 1);
+      final quantity = productQuantities[productId] ?? 1;
+      await cartService.addToCart(userId, productId, quantity);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Sản phẩm đã thêm vào giỏ hàng!",
+            "Đã thêm $quantity sản phẩm vào giỏ hàng!",
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green,
@@ -120,6 +111,27 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
         ),
       );
     }
+  }
+
+  void _updateQuantity(int productId, int change, int stock) {
+    setState(() {
+      final currentQuantity = productQuantities[productId] ?? 1;
+      final newQuantity = currentQuantity + change;
+
+      if (newQuantity > stock) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Số lượng vượt quá kho"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (newQuantity >= 1) {
+        productQuantities[productId] = newQuantity;
+      }
+    });
   }
 
   @override
@@ -143,7 +155,7 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                   );
                 },
               ),
-              if (cartItemCount > 0) // Hiển thị số lượng nếu lớn hơn 0
+              if (cartItemCount > 0)
                 Positioned(
                   right: 8,
                   top: 8,
@@ -189,11 +201,12 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
+            final productId = product['productId'];
             final productName =
                 product['productName'] ?? "Không có tên";
-            final price = product['price'] != null
-                ? product['price'].toString()
-                : "0.0";
+            final price = product['price']?.toString() ?? "0.0";
+            final stock = product['stock'] ?? 0;
+            final quantity = productQuantities[productId] ?? 1;
             final imageUrl = product['image'] ??
                 'https://via.placeholder.com/150';
 
@@ -252,11 +265,31 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
                     ),
                   ),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.remove, color: Colors.red),
+                          onPressed: () =>
+                              _updateQuantity(productId, -1, stock),
+                        ),
+                        Text(
+                          '$quantity',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.add, color: Colors.green),
+                          onPressed: () =>
+                              _updateQuantity(productId, 1, stock),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: ElevatedButton(
-                      onPressed: () =>
-                          _addToCart(product['productId']),
+                      onPressed: () => _addToCart(productId),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(

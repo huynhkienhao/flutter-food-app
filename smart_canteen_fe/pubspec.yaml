@@ -21,6 +21,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   qr_flutter: ^4.1.0
   barcode_scan2: ^4.2.0
+  signalr_netcore: ^1.4.0
+  flutter_local_notifications: ^18.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

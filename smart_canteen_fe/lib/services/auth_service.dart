@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config_url/config.dart';
 
-
 class AuthService {
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/Authenticate/login");
+    final url = Uri.parse("${Config.apiBaseUrl}/api/Authenticate/login");
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -22,16 +21,26 @@ class AuthService {
 
   // Đăng ký
   Future<Map<String, dynamic>> register(
-      String username, String email, String password, String fullName, String role) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/Authenticate/register");
+      String username,
+      String email,
+      String password,  {
+        String? fullName,
+        String? role,
+      }) async {
+    final url = Uri.parse("${Config.apiBaseUrl}/api/Authenticate/register");
+    final body = {
+      'username': username,
+      'email': email,
+      'password': password,
+    };
+
+    if (fullName != null) body['fullName'] = fullName;
+    if (role != null) body['role'] = role;
+
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'username': username,
-        'email': email,
-        'password': password,
-      }),
+      body: json.encode(body),
     );
 
     if (response.statusCode == 200) {
@@ -43,7 +52,7 @@ class AuthService {
 
   // Lấy thông tin chi tiết của User
   Future<Map<String, dynamic>> getUserDetails(String userId, String token) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/User/$userId");
+    final url = Uri.parse("${Config.apiBaseUrl}/api/User/$userId");
     final response = await http.get(
       url,
       headers: {
@@ -61,8 +70,11 @@ class AuthService {
 
   // Cập nhật thông tin User
   Future<void> updateUser(
-      String userId, Map<String, dynamic> userData, String token) async {
-    final url = Uri.parse("${Config.apiBaseUrl}/User/$userId");
+      String userId,
+      Map<String, dynamic> userData,
+      String token,
+      ) async {
+    final url = Uri.parse("${Config.apiBaseUrl}/api/User/$userId");
     final response = await http.put(
       url,
       headers: {
@@ -76,5 +88,4 @@ class AuthService {
       throw Exception("Failed to update user: ${response.statusCode}");
     }
   }
-
 }

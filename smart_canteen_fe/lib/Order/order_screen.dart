@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:smart_canteen_fe/user/UserScreen.dart';
 
 class OrderScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
 
-  const OrderScreen({required this.orderData});
+  const OrderScreen({required this.orderData, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +15,16 @@ class OrderScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text("Chi tiết hóa đơn"),
         backgroundColor: Colors.blue[800],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => UserScreen()),
+                  (route) => false,
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
