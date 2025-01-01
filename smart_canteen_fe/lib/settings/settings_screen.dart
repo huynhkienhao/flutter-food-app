@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../update_user/UpdateUserScreen.dart';
 import '../screen/login_screen.dart';
+import '../Order/order_history_screen.dart'; // Thêm import cho OrderHistoryScreen
 
 class SettingsScreen extends StatelessWidget {
   final String? userId;
@@ -27,6 +28,22 @@ class SettingsScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => LoginScreen()),
           (route) => false,
     );
+  }
+
+  // Hàm điều hướng đến lịch sử đơn hàng
+  void _navigateToOrderHistory(BuildContext context) async {
+    if (userId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderHistoryScreen(userId: userId!), // Truyền userId vào OrderHistoryScreen
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User ID not found. Please log in.")),
+      );
+    }
   }
 
   @override
@@ -70,7 +87,17 @@ class SettingsScreen extends StatelessWidget {
                       Navigator.pop(context, true); // Trả về trạng thái đã cập nhật
                     }
                   },
+                ),
+                Divider(),
 
+                // Mục "Xem lịch sử đơn hàng"
+                ListTile(
+                  leading: Icon(Icons.history, color: Colors.green), // Biểu tượng lịch sử
+                  title: Text(
+                    'Xem lịch sử đơn hàng',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  onTap: () => _navigateToOrderHistory(context), // Chuyển đến màn hình lịch sử đơn hàng
                 ),
                 Divider(),
               ],
