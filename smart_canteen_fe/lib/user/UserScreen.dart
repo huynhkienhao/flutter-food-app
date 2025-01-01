@@ -151,6 +151,16 @@ class _UserScreenState extends State<UserScreen> {
     }
   }
 
+  // Hiển thị thông báo khi ấn vào "Yêu thích"
+  void _onFavoriteTap(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Chức năng này đang phát triển."),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _hubConnection.stop();
@@ -182,9 +192,14 @@ class _UserScreenState extends State<UserScreen> {
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          if (index == 1) {
+            // Khi người dùng ấn vào mục "Yêu thích", hiển thị thông báo mà không thay đổi trang
+            _onFavoriteTap(context);
+          } else {
+            setState(() {
+              _selectedIndex = index; // Cập nhật trang chỉ khi không phải "Yêu thích"
+            });
+          }
         },
         items: [
           BottomNavigationBarItem(
@@ -192,8 +207,8 @@ class _UserScreenState extends State<UserScreen> {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: "Danh mục",
+            icon: Icon(Icons.favorite),  // Biểu tượng yêu thích
+            label: "Yêu thích",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
