@@ -17,13 +17,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? fullName;
   String? phoneNumber;
   bool isLoading = true;
-
-  bool isDarkMode = false; // Trạng thái chế độ sáng/tối
+  bool isDarkMode = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserDetails();
+    _loadThemeMode();
+  }
+
+  Future<void> _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkModeProfile') ?? false;
+    });
+  }
+
+  Future<void> _setThemeMode(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkModeProfile', value);
+    setState(() {
+      isDarkMode = value;
+    });
   }
 
   Future<void> _loadUserDetails() async {
@@ -53,20 +68,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Chuyển đổi chế độ sáng/tối
-  void _toggleThemeMode() {
-    setState(() {
-      isDarkMode = !isDarkMode;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isDarkMode ? "Chế độ tối đã bật" : "Chế độ sáng đã bật",
-        ),
-      ),
-    );
-  }
-
   void _navigateToOrderHistory(BuildContext context) async {
     if (userId != null) {
       Navigator.push(
@@ -82,6 +83,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _navigateToSettings(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SettingsScreen(
+          userId: userId,
+          email: email,
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+          isDarkMode: isDarkMode,
+          onThemeToggle: (value) => _setThemeMode(value),
+        ),
+      ),
+    );
+    await _loadThemeMode();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,24 +107,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text(
           'Thông tin cá nhân',
-          style: TextStyle(
-            color: Colors.white,
-          ),
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: isDarkMode ? Colors.black : Colors.green,
-        actions: [
-          IconButton(
-            icon: Icon(
-              isDarkMode ? Icons.dark_mode : Icons.light_mode,
-              color: Colors.white,
-            ),
-            onPressed: _toggleThemeMode, // Gọi hàm chuyển đổi chế độ
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Thông tin người dùng
           Container(
             color: isDarkMode ? Colors.grey[900] : Colors.green[50],
             child: isLoading
@@ -116,7 +122,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             )
                 : Column(
               children: [
-                // Phần thông tin người dùng
                 Container(
                   color: isDarkMode ? Colors.grey[740] : Colors.green[50],
                   padding: EdgeInsets.only(
@@ -169,15 +174,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         email ?? "Email người dùng",
                         style: TextStyle(
                           fontSize: 16,
-                          color:
-                          isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color: isDarkMode
+                              ? Colors.grey[400]
+                              : Colors.grey[700],
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                // Phần thông tin bổ sung
                 SizedBox(height: 16),
                 Container(
                   color: isDarkMode ? Colors.black : Colors.white,
@@ -199,8 +203,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SizedBox(height: 16),
-
-          // Heading "Tiện ích"
           Container(
             color: isDarkMode ? Colors.black : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -216,26 +218,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-
-          // Giảm khoảng cách giữa Heading và Card
           SizedBox(height: 4),
-
-          // Phần "Xem lịch sử đơn hàng"
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: OrderHistoryMomoCard(
+          Column(
+            children: [
+              OrderHistoryCard(
                 onTap: () => _navigateToOrderHistory(context),
-                isDarkMode: isDarkMode, // Truyền trạng thái chế độ tối
+                isDarkMode: isDarkMode,
               ),
-            ),
+              SettingsCard(
+                onTap: () => _navigateToSettings(context),
+                isDarkMode: isDarkMode,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
 
   Widget _buildInfoRow(String title, String value) {
     return Row(
@@ -261,11 +260,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class OrderHistoryMomoCard extends StatelessWidget {
+class OrderHistoryCard extends StatelessWidget {
   final VoidCallback onTap;
-  final bool isDarkMode; // Trạng thái chế độ tối
+  final bool isDarkMode;
 
-  const OrderHistoryMomoCard({
+  const OrderHistoryCard({
     Key? key,
     required this.onTap,
     required this.isDarkMode,
@@ -276,11 +275,11 @@ class OrderHistoryMomoCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 200,
+        width: MediaQuery.of(context).size.width - 16,
         height: 80,
-        margin: EdgeInsets.only(left: 8.0),
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.white : Colors.white,
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -289,17 +288,16 @@ class OrderHistoryMomoCard extends StatelessWidget {
                   : Colors.grey.withOpacity(0.5),
               spreadRadius: 2,
               blurRadius: 6,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icon bên trái
             Container(
-              margin: EdgeInsets.all(12),
-              padding: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isDarkMode ? Colors.grey[700] : Colors.green[100],
                 shape: BoxShape.circle,
@@ -310,14 +308,12 @@ class OrderHistoryMomoCard extends StatelessWidget {
                 color: isDarkMode ? Colors.white : Colors.green[800],
               ),
             ),
-            // Văn bản bên phải icon
             Text(
               'Lịch sử đơn hàng',
-              textAlign: TextAlign.left,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.black : Colors.grey[800],
+                color: isDarkMode ? Colors.white : Colors.grey[800],
               ),
             ),
           ],
@@ -326,3 +322,67 @@ class OrderHistoryMomoCard extends StatelessWidget {
     );
   }
 }
+
+class SettingsCard extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isDarkMode;
+
+  const SettingsCard({
+    Key? key,
+    required this.onTap,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: MediaQuery.of(context).size.width - 16,
+        height: 80,
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.grey.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[700] : Colors.green[100],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.settings,
+                size: 24,
+                color: isDarkMode ? Colors.white : Colors.green[800],
+              ),
+            ),
+            Text(
+              'Cài đặt',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.grey[800],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

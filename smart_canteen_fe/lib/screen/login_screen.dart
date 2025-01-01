@@ -8,14 +8,17 @@ import '../Admin/AdminScreen.dart';
 import '../User/UserScreen.dart';
 
 class LoginScreen extends StatefulWidget {
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
+
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final AuthService authService = AuthService();
+
 
   bool rememberMe = false;
   bool isPasswordVisible = false;
@@ -87,20 +90,16 @@ class _LoginScreenState extends State<LoginScreen> {
               MaterialPageRoute(builder: (context) => UserScreen()),
             );
           } else {
-            throw Exception("Không xác định được role");
+            throw Exception("Không xác định được vai trò người dùng.");
           }
         } else {
-          throw Exception("Token, UserId hoặc Role không tồn tại");
+          throw Exception("Thiếu thông tin đăng nhập quan trọng.");
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login failed: ${response['message']}")),
-        );
+        _showSnackBar("Đăng nhập thất bại: ${response['message']}");
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${error.toString()}")),
-      );
+      _showSnackBar("Lỗi: ${error.toString()}");
     } finally {
       setState(() {
         isLoading = false;
@@ -108,62 +107,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _launchGuideUrl() async {
-    const guideUrl = 'https://qlcntt.hutech.edu.vn/chi-tiet-ho-tro/1007011';
-    try {
-      final Uri url = Uri.parse(guideUrl);
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw 'Không thể mở liên kết.';
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
-    }
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
-  void _launchFacebookUrl() async {
-    const facebookUrl = 'https://www.facebook.com/hutechuniversity?mibextid=ZbWKwL';
+  void _launchUrl(String url, String errorMessage) async {
     try {
-      final Uri url = Uri.parse(facebookUrl);
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw 'Không thể mở liên kết Facebook.';
+      final Uri uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw Exception(errorMessage);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
+      _showSnackBar("Lỗi: $e");
     }
   }
-
-  void _launchYouTubeUrl() async {
-    const youtubeUrl = 'https://youtube.com/@hutechuniversity?si=fB-i1qlYOKLkwo43';
-    try {
-      final Uri url = Uri.parse(youtubeUrl);
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw 'Không thể mở liên kết YouTube.';
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
-    }
-  }
-
-  void _launchInstagramUrl() async {
-    const instagramUrl = 'https://www.instagram.com';
-    try {
-      final Uri url = Uri.parse(instagramUrl);
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw 'Không thể mở liên kết Instagram.';
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -181,61 +140,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     'assets/images/logo.png',
                     height: 120,
                   ),
-                  const SizedBox(height: 70),
+                  SizedBox(height: 70),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'TÀI KHOẢN',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
+                        _buildLabel('TÀI KHOẢN'),
+                        _buildTextField(
                           controller: usernameController,
-                          decoration: const InputDecoration(
-                            hintText: 'Nhập tài khoản',
-                            border: UnderlineInputBorder(),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue, width: 2),
-                            ),
-                          ),
+                          hintText: 'Nhập tài khoản',
                         ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'MẬT KHẨU',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: passwordController,
-                          obscureText: !isPasswordVisible,
-                          decoration: InputDecoration(
-                            hintText: 'Nhập mật khẩu',
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  isPasswordVisible = !isPasswordVisible;
-                                });
-                              },
-                            ),
-                            border: const UnderlineInputBorder(),
-                            enabledBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue, width: 2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 20),
+                        _buildLabel('MẬT KHẨU'),
+                        _buildPasswordField(),
+                        SizedBox(height: 10),
                         Row(
                           children: [
                             Checkbox(
@@ -246,10 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                             ),
-                            const Text('Ghi nhớ đăng nhập'),
+                            Text('Ghi nhớ đăng nhập'),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         isLoading
                             ? Center(child: CircularProgressIndicator())
                             : ElevatedButton(
@@ -259,95 +178,148 @@ class _LoginScreenState extends State<LoginScreen> {
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Đăng nhập',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'Đăng nhập không được? ',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: 'Xem hướng dẫn tại đây',
-                                  style: const TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  recognizer: TapGestureRecognizer()..onTap = _launchGuideUrl,
-                                ),
-                              ],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 120),
-                        // Đoạn code mạng xã hội và bản quyền
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.facebook, color: Colors.blue, size: 40),
-                                onPressed: _launchFacebookUrl,
-                              ),
-                              SizedBox(width: 10),
-                              IconButton(
-                                icon: Image.asset(
-                                  'assets/images/youtube_logo.webp',
-                                  width: 50,
-                                  height: 50,
-                                ),
-                                onPressed: _launchYouTubeUrl,
-                              ),
-                              SizedBox(width: 10),
-                              IconButton(
-                                icon: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                  ),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      'assets/images/instagram_logo.png',
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                onPressed: _launchInstagramUrl,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: Center( // Đảm bảo dòng chữ nằm ở giữa
-                            child: Text(
-                              'e-HUTECH ©2025 · Phiên bản 3.4.9 - a402',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
+                        SizedBox(height: 20),
+                        _buildHelpLink(),
+                        SizedBox(height: 120),
+                        _buildSocialLinks(),
+                        _buildFooter(),
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(fontSize: 14, color: Colors.grey),
+    );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String hintText}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: hintText,
+        border: UnderlineInputBorder(),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextField(
+      controller: passwordController,
+      obscureText: !isPasswordVisible,
+      decoration: InputDecoration(
+        hintText: 'Nhập mật khẩu',
+        suffixIcon: IconButton(
+          icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+          onPressed: () {
+            setState(() {
+              isPasswordVisible = !isPasswordVisible;
+            });
+          },
+        ),
+        border: UnderlineInputBorder(),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpLink() {
+    return Center(
+      child: RichText(
+        text: TextSpan(
+          text: 'Đăng nhập không được? ',
+          style: TextStyle(color: Colors.black, fontSize: 14),
+          children: [
+            TextSpan(
+              text: 'Xem hướng dẫn tại đây',
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => _launchUrl(
+                  'https://qlcntt.hutech.edu.vn/chi-tiet-ho-tro/1007011',
+                  'Không thể mở liên kết.',
+                ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialLinks() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(Icons.facebook, color: Colors.blue, size: 40),
+          onPressed: () => _launchUrl(
+            'https://www.facebook.com/hutechuniversity?mibextid=ZbWKwL',
+            'Không thể mở liên kết Facebook.',
+          ),
+        ),
+        SizedBox(width: 10),
+        IconButton(
+          icon: Image.asset('assets/images/youtube_logo.webp', width: 50, height: 50),
+          onPressed: () => _launchUrl(
+            'https://youtube.com/@hutechuniversity?si=fB-i1qlYOKLkwo43',
+            'Không thể mở liên kết YouTube.',
+          ),
+        ),
+        SizedBox(width: 10),
+        IconButton(
+          icon: ClipOval(
+            child: Image.asset(
+              'assets/images/instagram_logo.png',
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+          onPressed: () => _launchUrl(
+            'https://www.instagram.com',
+            'Không thể mở liên kết Instagram.',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Center(
+        child: Text(
+          'e-HUTECH ©2025 · Phiên bản 3.4.9 - a402',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
