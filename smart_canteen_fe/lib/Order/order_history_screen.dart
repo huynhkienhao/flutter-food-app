@@ -40,7 +40,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load order history: $e")),
+        SnackBar(content: Text("Không thể tải lịch sử đơn hàng: $e")),
       );
       setState(() {
         isLoading = false;
@@ -66,7 +66,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
       if (status == "Completed") {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showCustomNotification(context, "Order $orderId has been completed!");
+          _showCustomNotification(context, "Đơn hàng $orderId đã hoàn thành!");
         });
 
         _loadOrderHistory();
@@ -75,15 +75,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     try {
       await _hubConnection.start();
-      print("SignalR connection established");
+      print("Kết nối SignalR thành công");
     } catch (error) {
-      print("SignalR connection error: $error");
+      print("Lỗi kết nối SignalR: $error");
     }
   }
 
   String formatCurrency(double amount) {
     final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     return currencyFormat.format(amount);
+  }
+
+  String formatOrderDate(String rawDate) {
+    final DateTime parsedDate = DateTime.parse(rawDate);
+    final DateFormat formatter = DateFormat('dd/MM/yyyy HH:mm');
+    return formatter.format(parsedDate);
   }
 
   void _showCustomNotification(BuildContext context, String message) {
@@ -153,7 +159,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load order details: $e")),
+        SnackBar(content: Text("Không thể tải chi tiết đơn hàng: $e")),
       );
     }
   }
@@ -167,27 +173,100 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Order History")),
+      appBar: AppBar(
+        title: Text(
+          "Lịch sử đơn hàng",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        backgroundColor: Colors.teal,
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : orderHistory.isEmpty
-          ? Center(child: Text("No orders found."))
-          : ListView.builder(
-        itemCount: orderHistory.length,
-        itemBuilder: (context, index) {
-          final order = orderHistory[index];
-          return ListTile(
-            title: Text("Order ID: ${order['orderId']}"),
-            subtitle: Text(
-              "Total: ${formatCurrency(order['totalPrice'] ?? 0)}",
-            ),
-            trailing: Text(order['status']),
-            onTap: () => _navigateToOrderScreen(
-              context,
-              order['orderId'],
-            ),
-          );
-        },
+          ? Center(
+        child: Text(
+          "Không có đơn hàng nào.",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+      )
+          : Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ListView.builder(
+          itemCount: orderHistory.length,
+          itemBuilder: (context, index) {
+            final order = orderHistory[index];
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 8),
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                onTap: () => _navigateToOrderScreen(
+                  context,
+                  order['orderId'],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Mã đơn hàng: ${order['orderId']}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: order['status'] == "Completed"
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              order['status'] == "Completed"
+                                  ? "Hoàn thành"
+                                  : "Đang xử lý",
+                              style: TextStyle(
+                                color: order['status'] == "Completed"
+                                    ? Colors.green
+                                    : Colors.orange,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Ngày đặt: ${formatOrderDate(order['orderTime'])}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Tổng cộng: ${formatCurrency(order['totalPrice'] ?? 0)}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

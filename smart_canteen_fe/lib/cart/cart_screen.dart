@@ -50,15 +50,14 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  // Cập nhật lại giá trị tổng tiền giỏ hàng
   void _calculateTotalPrice() {
     totalPrice = 0.0;
     for (var item in cartItems) {
-      final price = item['productPrice'] ?? 0.0; // Đảm bảo giá không null
-      final quantity = item['quantity'] ?? 0;    // Đảm bảo số lượng không null
+      final price = item['productPrice'] ?? 0.0;
+      final quantity = item['quantity'] ?? 0;
       totalPrice += price * quantity;
     }
-    setState(() {}); // Cập nhật UI sau khi tính tổng
+    setState(() {});
   }
 
   void _removeItem(int cartId, int index) async {
@@ -66,7 +65,7 @@ class _CartScreenState extends State<CartScreen> {
       await cartService.removeFromCart(cartId);
       setState(() {
         cartItems.removeAt(index);
-        _calculateTotalPrice(); // Cập nhật lại tổng giá trị sau khi xóa sản phẩm
+        _calculateTotalPrice();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Đã xóa sản phẩm khỏi giỏ hàng.")),
@@ -90,7 +89,7 @@ class _CartScreenState extends State<CartScreen> {
       await cartService.updateCartQuantity(cartId, newQuantity);
       setState(() {
         cartItems[index]['quantity'] = newQuantity;
-        _calculateTotalPrice(); // Cập nhật lại tổng giá trị sau khi thay đổi số lượng
+        _calculateTotalPrice();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Cập nhật số lượng thành công.")),
@@ -195,16 +194,42 @@ class _CartScreenState extends State<CartScreen> {
         _buildTotalSection(),
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton.icon(
+          child: ElevatedButton(
             onPressed: _createOrder,
-            icon: Icon(Icons.receipt_long),
-            label: Text("Xuất hóa đơn"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding: EdgeInsets.symmetric(vertical: 15),
+            ),
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFFFD54F), Color(0xFFFFA726)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Container(
+                height: 50,
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.receipt_long, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text(
+                      "Xuất hóa đơn",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
