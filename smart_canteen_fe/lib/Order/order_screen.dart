@@ -23,6 +23,32 @@ class OrderScreen extends StatelessWidget {
     }
   }
 
+  String translateStatus(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'Đang chờ xử lý';
+      case 'completed':
+        return 'Hoàn thành';
+      case 'canceled':
+        return 'Đã hủy';
+      default:
+        return 'Không xác định';
+    }
+  }
+
+  Color getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return Colors.orange; // Màu cam cho trạng thái "Đang chờ xử lý"
+      case 'completed':
+        return Colors.green; // Màu xanh cho trạng thái "Hoàn thành"
+      case 'canceled':
+        return Colors.red; // Màu đỏ cho trạng thái "Đã hủy"
+      default:
+        return Colors.grey; // Màu xám cho trạng thái không xác định
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final orderDetails = orderData['orderDetails'] as List<dynamic>? ?? [];
@@ -72,7 +98,11 @@ class OrderScreen extends StatelessWidget {
                   _buildInfoRow("Mã hóa đơn:", "${orderData['orderId']}"),
                   _buildInfoRow("Tổng tiền:",
                       getCurrencyFormat().format(orderData['totalPrice'] ?? 0)),
-                  _buildInfoRow("Trạng thái:", "${orderData['status']}"),
+                  _buildInfoRow(
+                    "Trạng thái:",
+                    translateStatus(orderData['status']),
+                    color: getStatusColor(orderData['status']),
+                  ),
                   _buildInfoRow("Thời gian:",
                       formatOrderTime(orderData['orderTime'])),
                   Divider(
@@ -166,35 +196,40 @@ class OrderScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String title, String value) {
+  Widget _buildInfoRow(String title, String value, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        // Đảm bảo căn dòng trên cùng
+        crossAxisAlignment: CrossAxisAlignment.start, // Căn dòng trên cùng
         children: [
           Expanded(
             flex: 3,
             child: Text(
               title,
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600]),
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[600],
+              ),
             ),
           ),
           Expanded(
             flex: 5,
             child: Text(
               value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.visible, // Đảm bảo xuống dòng nếu tràn
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color ?? Colors.black, // Dùng màu được truyền hoặc mặc định màu đen
+              ),
+              overflow: TextOverflow.visible,
             ),
           ),
         ],
       ),
     );
   }
+
 
   String _generateQRCodeData(Map<String, dynamic> orderData) {
     final buffer = StringBuffer();
