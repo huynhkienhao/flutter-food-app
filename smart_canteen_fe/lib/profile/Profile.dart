@@ -68,6 +68,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _navigateToUpdateUser(BuildContext context) async {
+    final updatedData = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UpdateUserScreen(
+          userId: userId!,
+          email: email,
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+        ),
+      ),
+    );
+
+    if (updatedData != null && mounted) {
+      setState(() {
+        email = updatedData['email'];
+        fullName = updatedData['fullName'];
+        phoneNumber = updatedData['phoneNumber'];
+      });
+    }
+  }
+
   void _navigateToOrderHistory(BuildContext context) async {
     if (userId != null) {
       Navigator.push(
@@ -133,19 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => UpdateUserScreen(
-                                userId: userId!,
-                                email: email,
-                                fullName: fullName,
-                                phoneNumber: phoneNumber,
-                              ),
-                            ),
-                          );
-                        },
+                        onTap: () => _navigateToUpdateUser(context),
                         child: CircleAvatar(
                           radius: 50,
                           backgroundColor: isDarkMode
@@ -385,4 +395,3 @@ class SettingsCard extends StatelessWidget {
     );
   }
 }
-

@@ -174,19 +174,7 @@ class _UserScreenState extends State<UserScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      appBar: AppBar(
-        title: Text("User Dashboard"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.history),
-            onPressed: () => _navigateToOrderHistory(context),
-          ),
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () => _logout(context),
-          ),
-        ],
-      ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.green,

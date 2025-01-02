@@ -58,7 +58,11 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
             SnackBar(content: Text("Cập nhật thông tin thành công!")),
           );
 
-          Navigator.pop(context, true);
+          Navigator.pop(context, {
+            'email': email,
+            'fullName': fullName,
+            'phoneNumber': phoneNumber,
+          });
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Không thể cập nhật thông tin: $e")),
@@ -67,6 +71,7 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
