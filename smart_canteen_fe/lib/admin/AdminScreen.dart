@@ -5,13 +5,15 @@ import 'package:signalr_netcore/hub_connection_builder.dart';
 import 'package:signalr_netcore/http_connection_options.dart';
 import 'package:signalr_netcore/itransport.dart';
 import '../../config_url/config.dart';
-import '../QrCode/qr_code_scanner.dart';
 import '../Order/order_history_admin.dart';
 import '../Category/category_screen.dart';
+import '../Order/order_screen.dart';
 import '../Product/product_screen.dart';
 import '../screen/login_screen.dart';
 import '../Profile/Profile.dart';
 import 'UserManagementAdminScreen.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
+import 'dart:convert';
 
 class AdminScreen extends StatefulWidget {
   @override
@@ -20,6 +22,7 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   late HubConnection _hubConnection;
+  int _selectedIndex = 0; // Track selected index for bottom navigation.
 
   @override
   void initState() {
@@ -123,12 +126,45 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+  Future<void> _scanQrCode(BuildContext context) async {
+    try {
+      final result = await BarcodeScanner.scan();
+
+      if (result.type == ResultType.Barcode) {
+        final scannedData = result.rawContent.trim();
+        print('Scanned Data: $scannedData');
+
+        // Parse the scanned data and navigate to OrderScreen.
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrderScreen(
+              orderData: _parseScannedData(scannedData),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error occurred while scanning QR Code: $e');
+    }
+  }
+
+  Map<String, dynamic> _parseScannedData(String data) {
+    try {
+      return json.decode(data);
+    } catch (e) {
+      print('Invalid QR Code format: $e');
+      return {};
+    }
+  }
+
   @override
   void dispose() {
     _hubConnection.stop();
     super.dispose();
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,124 +183,122 @@ class _AdminScreenState extends State<AdminScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Chào mừng, Admin!",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              SizedBox(height: 20),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildDashboardCard(
-                    context,
-                    title: "Quản lý danh mục",
-                    icon: Icons.category,
-                    color: Colors.blueAccent,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CategoryManagementScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Quản lý sản phẩm",
-                    icon: Icons.shopping_cart,
-                    color: Colors.green,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Quản lý hóa đơn",
-                    icon: Icons.receipt,
-                    color: Colors.redAccent,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OrderHistoryAdminScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Quản lý người dùng",
-                    icon: Icons.people,
-                    color: Colors.purpleAccent,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UserManagementAdminScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Quét mã QR",
-                    icon: Icons.qr_code_scanner,
-                    color: Colors.teal,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QrCodeScanner(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Xem hồ sơ",
-                    icon: Icons.person,
-                    color: Colors.orangeAccent,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProfileScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: "Đăng xuất",
-                    icon: Icons.logout,
-                    color: Colors.grey,
-                    onTap: () {
-                      _logout(context);
-                    },
-                  ),
-                ],
-              ),
-            ],
+      body: _selectedIndex == 0
+          ? _buildMainDashboard(context)
+          : _selectedIndex == 2
+          ? ProfileScreen()
+          : _buildMainDashboard(context), // Keep default dashboard or another widget.
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: "Dashboard",
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_scanner),
+            label: "Quét mã QR",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Admin",
+          ),
+        ],
+        onTap: (index) async {
+          if (index == 1) {
+            await _scanQrCode(context); // Trigger QR code scanning when tapping on the second item.
+          } else {
+            setState(() {
+              _selectedIndex = index; // Update index only for other tabs.
+            });
+          }
+        },
+      ),
+    );
+  }
+
+
+  Widget _buildMainDashboard(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Chào mừng, Admin!",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            SizedBox(height: 20),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                _buildDashboardCard(
+                  context,
+                  title: "Quản lý danh mục",
+                  icon: Icons.category,
+                  color: Colors.blueAccent,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CategoryManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: "Quản lý sản phẩm",
+                  icon: Icons.shopping_cart,
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: "Quản lý hóa đơn",
+                  icon: Icons.receipt,
+                  color: Colors.redAccent,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OrderHistoryAdminScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: "Quản lý người dùng",
+                  icon: Icons.people,
+                  color: Colors.purpleAccent,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserManagementAdminScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
