@@ -88,4 +88,6 @@ class AuthService {
       throw Exception("Failed to update user: ${response.statusCode}");
     }
   }
+
+
 }

@@ -4,8 +4,8 @@ import 'dart:convert';
 import '../Order/order_screen.dart';
 import '../Category/category_screen.dart';
 import '../Product/product_screen.dart';
-import '../Profile/Profile.dart';
 import '../Order/order_history_admin.dart';
+import '../profile/profile_admin_screen.dart';
 import 'UserManagementAdminScreen.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -77,7 +77,7 @@ class _AdminScreenState extends State<AdminScreen> {
         Expanded(
           child: _selectedIndex == 0
               ? _buildMainDashboard(context)
-              : ProfileScreen(),
+              : ProfileAdminScreen(),
         ),
       ],
     );
