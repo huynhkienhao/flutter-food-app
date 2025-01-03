@@ -59,7 +59,7 @@ class OrderScreen extends StatelessWidget {
           "Chi tiết hóa đơn",
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.teal,
+          backgroundColor: Color(0xFF4CAF50),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -90,7 +90,7 @@ class OrderScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Colors.teal,
+                        color: Colors.green, // Màu xanh lá thay vì Colors.teal
                       ),
                     ),
                   ),
@@ -173,7 +173,7 @@ class OrderScreen extends StatelessWidget {
                         SizedBox(height: 10),
                         Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.teal, width: 3),
+                            border: Border.all(color: Colors.green, width: 3), // Màu viền QR Code
                             borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.all(8.0),
