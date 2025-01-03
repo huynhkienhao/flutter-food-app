@@ -39,6 +39,9 @@ namespace Smart_Canteen_BE.Repository
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
+                var relatedOrderDetails = _context.OrderDetails.Where(od => od.ProductId == id);
+                _context.OrderDetails.RemoveRange(relatedOrderDetails);
+
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }

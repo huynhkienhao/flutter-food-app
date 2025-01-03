@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../Cart/cart_screen.dart';
 import '../../services/cart_service.dart';
 import '../../services/product_service.dart';
+import '../../services/favorite_service.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -17,21 +18,25 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductService productService = ProductService();
   final CartService cartService = CartService();
-  final NumberFormat currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-
+  final FavoriteService favoriteService = FavoriteService();
+  final NumberFormat currencyFormat =
+  NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
   Map<String, dynamic>? product;
   bool isLoading = true;
   int quantity = 1; // Số lượng sản phẩm mặc định
   int cartItemCount = 0; // Số lượng sản phẩm trong giỏ hàng
+  bool isFavorite = false; // Trạng thái yêu thích
 
   @override
   void initState() {
     super.initState();
     _fetchProductDetails();
-    _fetchCartItemCount(); // Lấy số lượng sản phẩm trong giỏ hàng
+    _fetchCartItemCount();
+    _checkIfFavorite();
   }
 
+  /// Lấy thông tin chi tiết sản phẩm
   Future<void> _fetchProductDetails() async {
     try {
       final data = await productService.getProductDetails(widget.productId);
@@ -47,6 +52,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  /// Lấy số lượng sản phẩm trong giỏ hàng
   Future<void> _fetchCartItemCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -63,6 +69,59 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  /// Kiểm tra trạng thái yêu thích
+  Future<void> _checkIfFavorite() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString("user_id");
+
+      if (userId != null) {
+        final favorites = await favoriteService.getFavorites();
+        final isFav =
+        favorites.any((item) => item['productId'] == widget.productId);
+        setState(() {
+          isFavorite = isFav;
+        });
+      }
+    } catch (e) {
+      print("Error checking favorite status: $e");
+    }
+  }
+
+  /// Thêm hoặc xóa khỏi danh sách yêu thích
+  Future<void> _toggleFavorite() async {
+    try {
+      if (isFavorite) {
+        // Xóa khỏi danh sách yêu thích
+        final favorites = await favoriteService.getFavorites();
+        final favoriteItem =
+        favorites.firstWhere((item) => item['productId'] == widget.productId);
+        await favoriteService.removeFromFavorite(favoriteItem['id']);
+        setState(() {
+          isFavorite = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Đã xóa khỏi danh sách yêu thích!")),
+        );
+      } else {
+        // Thêm vào danh sách yêu thích
+        await favoriteService.addToFavorite(widget.productId);
+        setState(() {
+          isFavorite = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Đã thêm vào danh sách yêu thích!")),
+        );
+      }
+    } catch (e) {
+      print("Error toggling favorite: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Không thể cập nhật trạng thái yêu thích.")),
+      );
+    }
+  }
+
+  /// Cập nhật số lượng sản phẩm
   void _updateQuantity(int change, int stock) {
     setState(() {
       final newQuantity = quantity + change;
@@ -79,6 +138,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     });
   }
 
+  /// Thêm sản phẩm vào giỏ hàng
   Future<void> _addToCart() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("user_id");
@@ -108,7 +168,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       );
 
-      // Cập nhật số lượng sản phẩm trong giỏ
       _fetchCartItemCount();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +189,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         title: Text("Chi tiết sản phẩm"),
         backgroundColor: Colors.green,
         actions: [
+          IconButton(
+            icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: Colors.red),
+            onPressed: _toggleFavorite,
+          ),
           Stack(
             children: [
               IconButton(
@@ -139,7 +203,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     context,
                     MaterialPageRoute(builder: (context) => CartScreen()),
                   ).then((_) {
-                    _fetchCartItemCount(); // Cập nhật số lượng giỏ hàng khi quay lại
+                    _fetchCartItemCount();
                   });
                 },
               ),
@@ -180,18 +244,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ảnh sản phẩm
             Image.network(
-              product?['image'] ?? '', // Để trống nếu không có URL hợp lệ
+              product?['image'] ?? '',
               width: double.infinity,
               height: 300,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                // Hiển thị hình ảnh mặc định với width 100%
                 return Container(
                   width: double.infinity,
                   height: 300,
-                  color: Colors.grey[200], // Màu nền
+                  color: Colors.grey[200],
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -210,10 +272,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 );
               },
             ),
-
             SizedBox(height: 16),
-
-            // Tên sản phẩm
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -225,8 +284,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             SizedBox(height: 8),
-
-            // Giá sản phẩm
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -239,8 +296,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             SizedBox(height: 16),
-
-            // Mô tả sản phẩm
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -249,8 +304,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             SizedBox(height: 16),
-
-            // Điều chỉnh số lượng
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
@@ -283,8 +336,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             SizedBox(height: 16),
-
-            // Nút hành động: Thêm vào giỏ hàng
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ElevatedButton(

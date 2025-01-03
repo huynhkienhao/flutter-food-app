@@ -205,114 +205,132 @@ class _ProductsByCategoryScreenState extends State<ProductsByCategoryScreen> {
           itemBuilder: (context, index) {
             final product = products[index];
             final productId = product['productId'];
-            final productName =
-                product['productName'] ?? "Không có tên";
+            final productName = product['productName'] ?? "Không có tên";
             final price = product['price']?.toString() ?? "0.0";
             final stock = product['stock'] ?? 0;
             final quantity = productQuantities[productId] ?? 1;
-            final imageUrl = product['image'] ??
-                'https://via.placeholder.com/150';
+            final imageUrl = product['image'] ?? 'https://via.placeholder.com/150';
 
             return Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 4,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Stack(
                 children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 50,
-                              color: Colors.grey,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              productName,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          );
-                        },
+                            SizedBox(height: 4),
+                            Text(
+                              'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          productName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove, color: Colors.red),
+                              onPressed: () => _updateQuantity(productId, -1, stock),
+                            ),
+                            Text(
+                              '$quantity',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add, color: Colors.green),
+                              onPressed: () => _updateQuantity(productId, 1, stock),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ElevatedButton(
+                          onPressed: () => _addToCart(productId),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.green,
+                          child: Text(
+                            "Thêm vào giỏ",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.remove, color: Colors.red),
-                          onPressed: () =>
-                              _updateQuantity(productId, -1, stock),
-                        ),
-                        Text(
-                          '$quantity',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.add, color: Colors.green),
-                          onPressed: () =>
-                              _updateQuantity(productId, 1, stock),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () => _addToCart(productId),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
                       ),
-                      child: Text(
-                        "Thêm vào giỏ",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      SizedBox(height: 8),
+                    ],
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Add your favorite logic here
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Thêm vào yêu thích!")),
+                        );
+                      },
+                      child: Icon(
+                        Icons.favorite_border,
+                        color: Colors.red,
+                        size: 24,
                       ),
                     ),
                   ),
-                  SizedBox(height: 8),
                 ],
               ),
             );
           },
+
         ),
       ),
     );

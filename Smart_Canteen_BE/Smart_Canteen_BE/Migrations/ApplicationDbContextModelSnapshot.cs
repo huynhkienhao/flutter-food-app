@@ -205,6 +205,30 @@ namespace Smart_Canteen_BE.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("Smart_Canteen_BE.Model.Favorite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Favorites");
+                });
+
             modelBuilder.Entity("Smart_Canteen_BE.Model.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -461,6 +485,25 @@ namespace Smart_Canteen_BE.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Smart_Canteen_BE.Model.Favorite", b =>
+                {
+                    b.HasOne("Smart_Canteen_BE.Model.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Smart_Canteen_BE.Model.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Smart_Canteen_BE.Model.Order", b =>
                 {
                     b.HasOne("Smart_Canteen_BE.Model.User", "User")
@@ -496,7 +539,7 @@ namespace Smart_Canteen_BE.Migrations
                     b.HasOne("Smart_Canteen_BE.Model.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");

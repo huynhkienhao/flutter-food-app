@@ -6,10 +6,16 @@ import '../config_url/config.dart';
 class FavoriteService {
   final String baseUrl = "${Config.apiBaseUrl}/api/Favorite";
 
+
   // Lấy danh sách sản phẩm yêu thích của người dùng
-  Future<List<dynamic>> getFavoritesByUserId(String userId) async {
+  Future<List<dynamic>> getFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("jwt_token");
+    final userId = prefs.getString("user_id");
+
+    if (userId == null || token == null) {
+      throw Exception("Người dùng chưa đăng nhập.");
+    }
 
     final response = await http.get(
       Uri.parse("$baseUrl/user/$userId"),
@@ -19,14 +25,20 @@ class FavoriteService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception("Failed to fetch favorites. Status: ${response.statusCode}");
+      throw Exception(
+          "Lỗi khi tải danh sách yêu thích. Status: ${response.statusCode}");
     }
   }
 
   // Thêm sản phẩm vào danh sách yêu thích
-  Future<void> addToFavorite(String userId, int productId) async {
+  Future<List<dynamic>> addToFavorite(int productId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("jwt_token");
+    final userId = prefs.getString("user_id");
+
+    if (userId == null || token == null) {
+      throw Exception("Người dùng chưa đăng nhập.");
+    }
 
     final body = {
       "userId": userId,
@@ -42,15 +54,25 @@ class FavoriteService {
       body: json.encode(body),
     );
 
-    if (response.statusCode != 201) {
-      throw Exception("Failed to add to favorite. Status: ${response.statusCode}");
+    if (response.statusCode == 201) {
+      // Trả về danh sách yêu thích mới nhất
+      return getFavoritesByUserId(userId);
+    } else {
+      throw Exception(
+          "Lỗi khi thêm vào danh sách yêu thích. Status: ${response.statusCode}");
     }
   }
+
+
 
   // Xóa sản phẩm khỏi danh sách yêu thích
   Future<void> removeFromFavorite(int favoriteId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("jwt_token");
+
+    if (token == null) {
+      throw Exception("Người dùng chưa đăng nhập.");
+    }
 
     final response = await http.delete(
       Uri.parse("$baseUrl/$favoriteId"),
@@ -58,7 +80,35 @@ class FavoriteService {
     );
 
     if (response.statusCode != 204) {
-      throw Exception("Failed to remove from favorite. Status: ${response.statusCode}");
+      throw Exception(
+          "Lỗi khi xóa khỏi danh sách yêu thích. Status: ${response.statusCode}");
     }
   }
+
+  Future<List<dynamic>> getFavoritesByUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("jwt_token");
+
+    if (token == null) {
+      throw Exception("Người dùng chưa đăng nhập.");
+    }
+
+    final response = await http.get(
+      Uri.parse("$baseUrl/user/$userId"),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return data; // Đảm bảo đây là danh sách
+      } else {
+        throw Exception("Phản hồi API không phải là danh sách.");
+      }
+    } else {
+      throw Exception(
+          "Lỗi khi tải danh sách yêu thích. Status: ${response.statusCode}");
+    }
+  }
+
 }

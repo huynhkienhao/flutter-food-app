@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../../services/product_service.dart';
 import '../../services/cart_service.dart';
 import '../../services/category_service.dart';
+import '../../services/favorite_service.dart';
 import '../Cart/cart_screen.dart';
-import '../product/product_detail_screen.dart';
+import '../Favorite/favorite_screen.dart';
 import 'package:intl/intl.dart';
+
+import '../product/product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -15,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProductService productService = ProductService();
   final CartService cartService = CartService();
   final CategoryService categoryService = CategoryService();
+  final FavoriteService favoriteService = FavoriteService();
 
   final NumberFormat currencyFormat =
   NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
@@ -35,16 +39,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCategories();
   }
 
-  // Hàm để tải sản phẩm theo danh mục
   Future<void> _loadProducts({int? categoryId}) async {
     setState(() => isLoading = true);
     try {
       final data = categoryId == null
-          ? await productService.getProducts() // Gọi API lấy sản phẩm
+          ? await productService.getProducts()
           : await productService.getProductsByCategory(categoryId);
 
+      // Lấy danh sách sản phẩm yêu thích
+      final favorites = await favoriteService.getFavorites();
+      final favoriteProductIds = favorites.map((item) => item['productId']).toSet();
+
       setState(() {
-        products = data ?? [];
+        products = data?.map((product) {
+          product['isFavorite'] = favoriteProductIds.contains(product['productId']);
+          return product;
+        }).toList() ?? [];
         filteredProducts = products;
         isLoading = false;
       });
@@ -58,15 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Hàm để tải danh mục từ API
   Future<void> _loadCategories() async {
     setState(() => isCategoryLoading = true);
     try {
-      final data = await categoryService.getCategories(); // Gọi API lấy danh mục
-
-      categories = data;
-
+      final data = await categoryService.getCategories();
       setState(() {
+        categories = data;
         isCategoryLoading = false;
       });
     } catch (e) {
@@ -75,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Hàm lọc sản phẩm theo từ khóa
   void _filterProducts(String keyword) {
     setState(() {
       if (keyword.isEmpty) {
@@ -91,14 +97,59 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Chuyển tới trang chi tiết sản phẩm
+  Future<void> _toggleFavorite(int productId) async {
+    try {
+      final productIndex = products.indexWhere((product) => product['productId'] == productId);
+
+      if (productIndex != -1) {
+        final isCurrentlyFavorite = products[productIndex]['isFavorite'] ?? false;
+        if (isCurrentlyFavorite) {
+          // Xóa khỏi danh sách yêu thích
+          final favorites = await favoriteService.getFavorites();
+          final favoriteItem = favorites.firstWhere(
+                  (item) => item['productId'] == productId,
+              orElse: () => null);
+          if (favoriteItem != null) {
+            await favoriteService.removeFromFavorite(favoriteItem['favoriteId']);
+          }
+        } else {
+          // Thêm vào danh sách yêu thích
+          await favoriteService.addToFavorite(productId);
+        }
+
+        // Cập nhật trạng thái sản phẩm
+        setState(() {
+          products[productIndex]['isFavorite'] = !isCurrentlyFavorite;
+          filteredProducts = List.from(products);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isCurrentlyFavorite
+                  ? "Đã xóa khỏi danh sách yêu thích!"
+                  : "Đã thêm vào danh sách yêu thích!",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error toggling favorite: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Không thể cập nhật trạng thái yêu thích.")),
+      );
+    }
+  }
+
   void _navigateToProductDetail(int productId) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ProductDetailScreen(productId: productId),
       ),
-    );
+    ).then((_) {
+      _loadProducts();
+    });
   }
 
   @override
@@ -139,6 +190,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            icon: Icon(Icons.favorite, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FavoriteScreen(
+                    navigateToPage: (pageIndex) {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ).then((_) => setState(() {}));
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.shopping_cart, color: Colors.white),
             onPressed: () {
               Navigator.push(
@@ -153,73 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Hiển thị danh mục mà không có biểu tượng
-          isCategoryLoading
-              ? LinearProgressIndicator()
-              : Container(
-            height: 100,
-            margin: EdgeInsets.symmetric(vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
-                  final isSelected =
-                      selectedCategory == category['categoryName'];
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedCategory = category['categoryName'];
-                      });
-                      _loadProducts(categoryId: category['categoryId']);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 70,
-                          height: 70,
-                          margin: EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isSelected
-                                ? Colors.orange.shade100
-                                : Colors.grey.shade200,
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.orange
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.fastfood, // Không dùng biểu tượng riêng
-                            size: 40,
-                            color: isSelected ? Colors.orange : Colors.black,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          category['categoryName'] ?? "",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? Colors.orange
-                                : Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Danh sách sản phẩm
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
@@ -232,8 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
                 : GridView.builder(
               padding: EdgeInsets.all(10),
-              gridDelegate:
-              SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
@@ -251,50 +249,63 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(12)),
-                            child: Image.network(
-                              product['image'] ??
-                                  'https://via.placeholder.com/150',
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) {
-                                return Icon(Icons.broken_image,
-                                    size: 50);
-                              },
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                                child: Image.network(
+                                  product['image'] ??
+                                      'https://via.placeholder.com/150',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(Icons.broken_image, size: 50);
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product['productName'] ?? "Không có tên",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                product['productName'] ??
-                                    "Không có tên",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Giá: ${currencyFormat.format(product['price'] ?? 0)}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => _toggleFavorite(product['productId']),
+                            child: Icon(
+                              product['isFavorite'] == true
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: Colors.red,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ],

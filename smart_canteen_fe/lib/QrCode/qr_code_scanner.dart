@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+import 'package:smart_canteen_fe/Order/AdminOrderScreen.dart';
 import 'package:smart_canteen_fe/Order/order_screen.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
@@ -26,7 +27,7 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OrderScreen(orderData: _parseScannedData(scannedData)),
+            builder: (context) => AdminOrderScreen(orderData: _parseScannedData(scannedData)),
           ),
         );
       }
