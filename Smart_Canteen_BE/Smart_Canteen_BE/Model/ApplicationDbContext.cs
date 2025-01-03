@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<QRCode> QRCodes { get; set; }
+    public DbSet<Favorite> Favorites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,5 +65,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasForeignKey<QRCode>(qr => qr.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
 
-    } 
+    }
+
+
+
 }

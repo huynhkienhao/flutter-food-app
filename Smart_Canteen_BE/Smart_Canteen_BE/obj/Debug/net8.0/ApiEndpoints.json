@@ -196,6 +196,54 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "FavoriteController",
+    "Method": "AddToFavorite",
+    "RelativePath": "api/Favorite",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "favoriteInput",
+        "Type": "Smart_Canteen_BE.DTO.FavoriteInputDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FavoriteController",
+    "Method": "RemoveFromFavorite",
+    "RelativePath": "api/Favorite/{favoriteId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "favoriteId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FavoriteController",
+    "Method": "GetFavoritesByUserId",
+    "RelativePath": "api/Favorite/user/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Smart_Canteen_BE.Controllers.OrderController",
     "Method": "GetAll",
     "RelativePath": "api/Order",
