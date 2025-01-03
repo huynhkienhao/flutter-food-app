@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:signalr_netcore/hub_connection.dart';
+import 'package:signalr_netcore/hub_connection_builder.dart';
+import 'package:signalr_netcore/http_connection_options.dart';
+import 'package:signalr_netcore/itransport.dart';
+import '../../config_url/config.dart';
 import '../QrCode/qr_code_scanner.dart';
 import '../Order/order_history_admin.dart';
 import '../Category/category_screen.dart';
@@ -8,7 +13,105 @@ import '../screen/login_screen.dart';
 import '../Profile/Profile.dart';
 import 'UserManagementAdminScreen.dart';
 
-class AdminScreen extends StatelessWidget {
+class AdminScreen extends StatefulWidget {
+  @override
+  _AdminScreenState createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends State<AdminScreen> {
+  late HubConnection _hubConnection;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSignalR();
+  }
+
+  Future<void> _initializeSignalR() async {
+    _hubConnection = HubConnectionBuilder()
+        .withUrl(
+      '${Config.apiBaseUrl}/notificationHub',
+      options: HttpConnectionOptions(
+        transport: HttpTransportType.WebSockets,
+        skipNegotiation: true,
+      ),
+    )
+        .withAutomaticReconnect()
+        .build();
+
+    _hubConnection.on("NewOrderCreated", (arguments) {
+      final orderId = arguments?[0];
+      final totalPrice = arguments?[1];
+      final orderTime = arguments?[2];
+
+      _showCustomNotification(context,
+          "Đơn hàng mới: #$orderId - Tổng tiền: $totalPrice - Thời gian: $orderTime");
+    });
+
+    try {
+      await _hubConnection.start();
+      print("SignalR connection established for Admin");
+    } catch (error) {
+      print("SignalR connection error: $error");
+    }
+  }
+
+  void _showCustomNotification(BuildContext context, String message) {
+    final overlay = Overlay.of(context);
+
+    late final OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.black),
+                    onPressed: () {
+                      overlayEntry.remove();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -18,6 +121,12 @@ class AdminScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => LoginScreen()),
           (route) => false,
     );
+  }
+
+  @override
+  void dispose() {
+    _hubConnection.stop();
+    super.dispose();
   }
 
   @override

@@ -104,7 +104,10 @@ namespace Smart_Canteen_BE.Controllers
                 // Kiểm tra stock
                 if (product.Stock < cart.Quantity)
                 {
-                    return BadRequest(new { Message = $"Insufficient stock for product {product.ProductName}. Available: {product.Stock}, Requested: {cart.Quantity}" });
+                    return BadRequest(new
+                    {
+                        Message = $"Insufficient stock for product {product.ProductName}. Available: {product.Stock}, Requested: {cart.Quantity}"
+                    });
                 }
 
                 // Giảm stock
@@ -140,6 +143,10 @@ namespace Smart_Canteen_BE.Controllers
             // Lưu thay đổi vào cơ sở dữ liệu
             await _context.SaveChangesAsync();
 
+            // Gửi thông báo SignalR cho Admin
+            var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
+            await hubContext.Clients.All.SendAsync("NewOrderCreated", order.OrderId, order.TotalPrice, order.OrderTime);
+
             // Trả về OrderOutputDto
             var orderOutput = new OrderOutputDto
             {
@@ -160,6 +167,7 @@ namespace Smart_Canteen_BE.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = order.OrderId }, orderOutput);
         }
+
 
         [Authorize(Policy = "AdminOnly")]
         [HttpPut("{id}")]
@@ -216,8 +224,6 @@ namespace Smart_Canteen_BE.Controllers
 
             return Ok(new { Message = "Order status updated successfully." });
         }
-
-
     }
 
 }
