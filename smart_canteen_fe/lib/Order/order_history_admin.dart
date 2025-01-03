@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_canteen_fe/Order/AdminOrderScreen.dart';
 import 'package:smart_canteen_fe/services/order_service.dart';
-import 'order_screen.dart';
 
 class OrderHistoryAdminScreen extends StatefulWidget {
   @override
@@ -61,7 +61,7 @@ class _OrderHistoryAdminScreenState extends State<OrderHistoryAdminScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OrderScreen(orderData: orderData),
+          builder: (context) => AdminOrderScreen(orderData: orderData), // Sử dụng AdminOrderScreen từ đoạn code 1
         ),
       );
     } catch (e) {
@@ -96,7 +96,9 @@ class _OrderHistoryAdminScreenState extends State<OrderHistoryAdminScreen> {
                   IconButton(
                     icon: Icon(Icons.check_circle, color: Colors.green),
                     onPressed: () => _updateOrderStatus(
-                        context, order['orderId']),
+                      context,
+                      order['orderId'],
+                    ),
                   ),
               ],
             ),

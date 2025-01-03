@@ -75,14 +75,12 @@ namespace Smart_Canteen_BE.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Kiểm tra UserId
             var user = await _context.Users.FindAsync(orderInput.UserId);
             if (user == null)
             {
                 return BadRequest(new { Message = $"User with ID {orderInput.UserId} does not exist." });
             }
 
-            // Lấy danh sách Cart từ CartIds
             var carts = await _context.Carts
                 .Include(c => c.Product)
                 .Where(c => orderInput.CartIds.Contains(c.CartId) && c.UserId == orderInput.UserId)
@@ -93,7 +91,6 @@ namespace Smart_Canteen_BE.Controllers
                 return BadRequest(new { Message = "One or more Cart IDs do not exist or do not belong to the user." });
             }
 
-            // Kiểm tra stock và tính toán tổng giá
             decimal totalPrice = 0;
             var orderDetails = new List<OrderDetail>();
 
@@ -101,19 +98,13 @@ namespace Smart_Canteen_BE.Controllers
             {
                 var product = cart.Product;
 
-                // Kiểm tra stock
                 if (product.Stock < cart.Quantity)
                 {
-                    return BadRequest(new
-                    {
-                        Message = $"Insufficient stock for product {product.ProductName}. Available: {product.Stock}, Requested: {cart.Quantity}"
-                    });
+                    return BadRequest(new { Message = $"Insufficient stock for product {product.ProductName}." });
                 }
 
-                // Giảm stock
                 product.Stock -= cart.Quantity;
 
-                // Tạo OrderDetail
                 orderDetails.Add(new OrderDetail
                 {
                     ProductId = cart.ProductId,
@@ -121,11 +112,9 @@ namespace Smart_Canteen_BE.Controllers
                     SubTotal = product.Price * cart.Quantity
                 });
 
-                // Tính tổng giá
                 totalPrice += product.Price * cart.Quantity;
             }
 
-            // Tạo Order mới
             var order = new Order
             {
                 UserId = orderInput.UserId,
@@ -136,18 +125,13 @@ namespace Smart_Canteen_BE.Controllers
             };
 
             await _context.Orders.AddAsync(order);
-
-            // Xóa Cart sau khi Order
             _context.Carts.RemoveRange(carts);
-
-            // Lưu thay đổi vào cơ sở dữ liệu
             await _context.SaveChangesAsync();
 
             // Gửi thông báo SignalR cho Admin
             var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
             await hubContext.Clients.All.SendAsync("NewOrderCreated", order.OrderId, order.TotalPrice, order.OrderTime);
 
-            // Trả về OrderOutputDto
             var orderOutput = new OrderOutputDto
             {
                 OrderId = order.OrderId,
