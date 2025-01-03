@@ -25,6 +25,7 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IQRCodeRepository, QRCodeRepository>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
 // Add SignalR
 builder.Services.AddSignalR(); // Thêm SignalR vào container dịch vụ
